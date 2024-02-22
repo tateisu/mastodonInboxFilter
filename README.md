@@ -7,7 +7,7 @@ mastodonに手を入れずにスパムフィルタとして動作します。
 
 ```
 nginx
-  ┗ POST /inbox$ => mastodonInboxFilter => mastodon
+  ┗ POST .*/inbox$ => mastodonInboxFilter => mastodon
   ┗ other => mastodon 
 ```
 - nginx を設定して、外部から来たリクエストが POST で URL末尾が /inbox だった場合はリクエストを mastodonInboxFilter に中継します。
@@ -28,6 +28,8 @@ SRCJAR=`echo -n $LINE`
 DSTJAR="mastodonInboxFilter.jar"
 cp "$SRCJAR" "$DSTJAR"
 ```
+依存関係全部入りのJARが生成されます。
+JARファイルとJavaと設定ファイルがあれば起動可能です。
 
 ### コマンドラインオプション
 ```
