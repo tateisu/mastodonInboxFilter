@@ -17,11 +17,37 @@ nginx
 - スパムだと判断したらしれっと 202 Accepted を返します。
 
 ## mastodonInboxFilter の設定と起動と終了
+
+### ビルド
+- Java 17 以上が必要
+
+```
+./gradlew shadowJar
+LINE=`ls -1t build/libs/mastodonInboxFilter-*-all.jar|head -n 1`
+SRCJAR=`echo -n $LINE`
+DSTJAR="mastodonInboxFilter.jar"
+cp "$SRCJAR" "$DSTJAR"
+```
+
+### コマンドラインオプション
+```
+$ java -jar mastodonInboxFilter.jar --help
+Usage: java -jar mastodonInboxFilter.jar options_list
+Arguments:
+    configPath [config.json5] -> config file (optional) { String }
+Options:
+    --configTest -> config test only
+    --help, -h -> Usage info
+    
+```
+
+### 設定ファイル
 まず設定ファイルの雛形をコピーします。
 ```
 cp sample.config.json5 config.json5
 ```
-コピーした `config.json5` を編集します。待機ホスト、待機ポート、リダイレクト先の変更は必須です。
+コピーした `config.json5` を編集します。
+- 待機ホスト、待機ポート、リダイレクト先の変更は必須です。
 
 ### 起動
 ```

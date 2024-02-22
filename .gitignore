@@ -40,3 +40,15 @@ bin/
 
 ### Mac OS ###
 .DS_Store
+
+
+###########################
+logs
+record
+cache
+mastodonInboxFilter.jar
+mastodonInboxFilter.log
+mastodonInboxFilter.pid
+config.json5
+*.pl
+*.sh
