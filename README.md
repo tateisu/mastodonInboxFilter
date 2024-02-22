@@ -107,7 +107,8 @@ $ tail -f mastodonInboxFilter.log
 ====
 # README(English)
 
-- This is an SPAM filter for Mastodon inbox.
+## What is this
+- This is a HTTP(s) reverse proxy server works as SPAM filter for Mastodon inbox.
 - No need to modify Mastodon's source code and setting.
 
 ## How it works
