@@ -16,7 +16,7 @@ nginx
 - スパムではないと判断したらmastodonに中継します。
 - スパムだと判断したらしれっと 202 Accepted を返します。
 
-## mastodonInboxFilter の設定と起動と終了
+## mastodonInboxFilter のセットアップ
 
 ### ビルド
 - Java 17 以上が必要
@@ -63,7 +63,22 @@ kill `cat mastodonInboxFilter.pid`
 ### ログ
 起動時に指定した mastodonInboxFilter.log に出力されます。
 
-## nginx の設定
+ログの例：
+```
+$ tail -f mastodonInboxFilter.log
+2024-02-22T10:22:59 INFO  InboxProxy - inboxProxy POST /inbox
+2024-02-22T10:22:59 WARN  APStatus - 20240222-102259.366 root.type is Announce. id=https://taruntarun.net/users/mayaeh/statuses/111972514443600421/activity
+2024-02-22T10:23:04 INFO  InboxProxy - inboxProxy POST /inbox
+2024-02-22T10:23:04 WARN  APStatus - 20240222-102304.996 root.type is Announce. id=https://taruntarun.net/users/mayaeh/statuses/111972514831659095/activity
+2024-02-22T10:27:40 INFO  InboxProxy - inboxProxy POST /inbox
+2024-02-22T10:27:40 WARN  APStatus - 20240222-102740.514 root.type is Delete. id=https://mastodon.social/users/DrkPhnx0991#delete
+2024-02-22T10:31:31 INFO  InboxProxy - inboxProxy POST /inbox
+2024-02-22T10:31:31 WARN  APStatus - 20240222-103131.443 root.type is Announce. id=https://taruntarun.net/users/mayaeh/statuses/111972548029757946/activity
+2024-02-22T10:34:50 INFO  InboxProxy - inboxProxy POST /inbox
+2024-02-22T10:34:50 INFO  SpamCheck - NG <word: https://ctkpaarr.org/> https://cmm.fyi/@w15e4pzlx4/111972560958939975 https://ctkpaarr.org/
+```
+
+## nginx のセットアップ
 `location @proxy`の中でproxy_passを指定してる箇所を変更します。
 
 ```
