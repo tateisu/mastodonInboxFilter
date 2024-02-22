@@ -12,7 +12,6 @@ import kotlinx.cli.ArgType
 import kotlinx.cli.default
 import kotlinx.cli.optional
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -120,27 +119,27 @@ fun main(args: Array<String>) {
             }
         }
     )
-    while (true){
-        sweepFolders(recordDir,cacheDataDir,cacheErrorDir)
+    while (true) {
+        sweepFolders(recordDir, cacheDataDir, cacheErrorDir)
         sleep(3600_000L)
     }
 }
 
-fun sweepFolders( vararg folders : File, limit:Long = 86400_000L){
-    for( folder in folders){
-        val names = try{
+fun sweepFolders(vararg folders: File, limit: Long = 86400_000L) {
+    for (folder in folders) {
+        val names = try {
             folder.list() ?: continue
-        }catch(ex:Throwable){
-            log.error("listFiled failed. $folder",ex)
+        } catch (ex: Throwable) {
+            log.error("listFiled failed. $folder", ex)
             continue
         }
         val expire = System.currentTimeMillis() - limit
-        for( name in names){
-            val file = File(folder,name)
-            when{
+        for (name in names) {
+            val file = File(folder, name)
+            when {
                 !file.isFile -> Unit
                 file.lastModified() > expire -> Unit
-                else-> file.delete()
+                else -> file.delete()
             }
         }
     }

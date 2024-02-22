@@ -18,12 +18,13 @@ class Config(
     val recordDir: String = "record",
     val cacheDir: String = "cache",
 
-    val mentionMin: Int,
-
     // HTTPクライアントのタイムアウト
     val requestTimeoutMs: Long,
     // HTTPクライアントのユーザエージェント
     val userAgent: String,
+
+    // メンション数の下限
+    val mentionMin: Int,
 
     // screen_name の下限
     val userNameLengthMin: Int,
