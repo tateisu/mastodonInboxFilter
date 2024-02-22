@@ -110,7 +110,7 @@ $ tail -f mastodonInboxFilter.log
 - This is an SPAM filter for Mastodon inbox.
 - No need to modify Mastodon's source code and setting.
 
-## How itworks
+## How it works
 
 ```
 nginx
