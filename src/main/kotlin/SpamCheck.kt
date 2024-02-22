@@ -34,6 +34,10 @@ suspend fun isSpam(
     httpClient: HttpClient,
     config: Config,
 ): Boolean {
+    // 別の投稿への返信はチェックしない
+    if (config.skipInReplyTo && !status.inReplyTo.isNullOrEmpty()) {
+        return false
+    }
     // メンション数が一定以上でないとチェックしない
     if (status.mentions?.let { it.size >= config.mentionMin } != true) {
         return false

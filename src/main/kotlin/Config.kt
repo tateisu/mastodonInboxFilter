@@ -36,15 +36,21 @@ class Config(
     val skipImageDigest: List<String>? = null,
     val skipAcct: List<String>? = null,
     val skipDomain: List<String>? = null,
+
+    val skipInReplyTo: Boolean = true,
 ) {
     @Transient
     val skipDomainSet = skipDomain?.toSet() ?: emptySet()
+
     @Transient
     val skipAcctSet = skipAcct?.toSet() ?: emptySet()
+
     @Transient
     val badImageDigestSet = badImageDigest?.toSet() ?: emptySet()
+
     @Transient
     val skipImageDigestSet = skipImageDigest?.toSet() ?: emptySet()
+
     @Transient
     val userNameLengthRange = userNameLengthMin..userNameLengthMax
 }

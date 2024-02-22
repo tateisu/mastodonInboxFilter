@@ -15,6 +15,8 @@ class APStatus(
     val mentions: List<Mention>?,
 
     val attachments: List<Attachment>?,
+
+    val inReplyTo:String?,
 ) {
     class Mention(
         val name: String,
@@ -100,6 +102,7 @@ fun JsonObject.toAPStatus(
             ?: error("missing status url. $this"),
         mentions = mentions,
         attachments = attachments,
+        inReplyTo = obj.string("inReplyTo")
     )
 }
 
