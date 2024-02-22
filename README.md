@@ -158,18 +158,18 @@ cp sample.config.json5 config.json5
 Then edit `config.json5` file. 
 - It is mandatory to change the standby host, standby port, and redirect destination.
 
-### 起動
+### Start server
 ```
 nohup java -jar mastodonInboxFilter.jar >>./mastodonInboxFilter.log 2>&1 &
 ```
 
-### 終了
+### Stop server
 ```
 kill `cat mastodonInboxFilter.pid`
 ```
 When the server receives the TERM signal, it exits after some cleanup.
 
-### ログ
+### Log
 It is output to mastodonInboxFilter.log specified at startup.
 
 example:
@@ -187,7 +187,7 @@ $ tail -f mastodonInboxFilter.log
 2024-02-22T10:34:50 INFO  SpamCheck - NG <word: https://ctkpaarr.org/> https://cmm.fyi/@w15e4pzlx4/111972560958939975 https://ctkpaarr.org/
 ```
 
-## nginx のセットアップ
+## Setup nginx configuration
 Change the part where proxy_pass is specified in `location @proxy`.
 
 ```
