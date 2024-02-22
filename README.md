@@ -1,5 +1,7 @@
 # mastodonInboxFilter
 
+(English README is below.)
+
 mastodon用のinbox SPAM filter です。
 mastodonに手を入れずにスパムフィルタとして動作します。
 
@@ -102,3 +104,107 @@ $ tail -f mastodonInboxFilter.log
 ```
 変更したら `sudo service nginx configtest` して大丈夫そうなら `sudo service nginx restart` します。
 
+====
+# README(English)
+
+- This is an SPAM filter for Mastodon inbox.
+- No need to modify Mastodon's source code and setting.
+
+## How itworks
+
+```
+nginx
+  ┗ POST .*/inbox$ => mastodonInboxFilter => mastodon
+  ┗ other => mastodon 
+```
+- Configure nginx that proxy the `POST .*inbox$` request to mastodonInboxFilter.
+- Other requests are proxy to mastodon server normally.
+- mastodonInboxFilter determines whether the request is SPAM or not.
+- If the requests is not SPAM, those are proxy to mastodon server.
+- If the requests is detected as SPAM, mastodonInboxFilter returns `202 Accepted` without proxy to mastodon server.
+
+## Setup mastodonInboxFilter
+
+### Build
+- Java 17+ required.
+
+```
+./gradlew shadowJar
+LINE=`ls -1t build/libs/mastodonInboxFilter-*-all.jar|head -n 1`
+SRCJAR=`echo -n $LINE`
+DSTJAR="mastodonInboxFilter.jar"
+cp "$SRCJAR" "$DSTJAR"
+```
+Generated JAR file will contains all dependencies.
+You can run it if you have `mastodonInboxFilter.jar`, `java`, and `config.json5`.
+
+### Command line options
+```
+$ java -jar mastodonInboxFilter.jar --help
+Usage: java -jar mastodonInboxFilter.jar options_list
+Arguments:
+    configPath [config.json5] -> config file (optional) { String }
+Options:
+    --configTest -> config test only
+    --help, -h -> Usage info
+    
+```
+
+### configuration file 
+First, copy the configuration file from sample.
+```
+cp sample.config.json5 config.json5
+```
+Then edit `config.json5` file. 
+- It is mandatory to change the standby host, standby port, and redirect destination.
+
+### 起動
+```
+nohup java -jar mastodonInboxFilter.jar >>./mastodonInboxFilter.log 2>&1 &
+```
+
+### 終了
+```
+kill `cat mastodonInboxFilter.pid`
+```
+When the server receives the TERM signal, it exits after some cleanup.
+
+### ログ
+It is output to mastodonInboxFilter.log specified at startup.
+
+example:
+```
+$ tail -f mastodonInboxFilter.log
+2024-02-22T10:22:59 INFO  InboxProxy - inboxProxy POST /inbox
+2024-02-22T10:22:59 WARN  APStatus - 20240222-102259.366 root.type is Announce. id=https://taruntarun.net/users/mayaeh/statuses/111972514443600421/activity
+2024-02-22T10:23:04 INFO  InboxProxy - inboxProxy POST /inbox
+2024-02-22T10:23:04 WARN  APStatus - 20240222-102304.996 root.type is Announce. id=https://taruntarun.net/users/mayaeh/statuses/111972514831659095/activity
+2024-02-22T10:27:40 INFO  InboxProxy - inboxProxy POST /inbox
+2024-02-22T10:27:40 WARN  APStatus - 20240222-102740.514 root.type is Delete. id=https://mastodon.social/users/DrkPhnx0991#delete
+2024-02-22T10:31:31 INFO  InboxProxy - inboxProxy POST /inbox
+2024-02-22T10:31:31 WARN  APStatus - 20240222-103131.443 root.type is Announce. id=https://taruntarun.net/users/mayaeh/statuses/111972548029757946/activity
+2024-02-22T10:34:50 INFO  InboxProxy - inboxProxy POST /inbox
+2024-02-22T10:34:50 INFO  SpamCheck - NG <word: https://ctkpaarr.org/> https://cmm.fyi/@w15e4pzlx4/111972560958939975 https://ctkpaarr.org/
+```
+
+## nginx のセットアップ
+Change the part where proxy_pass is specified in `location @proxy`.
+
+```
+    set $match "A";
+    if ( $request_method = POST ){
+       set $match "${match}B";
+    }
+    if ( $uri ~ "/inbox$" ){
+       set $match "${match}C";
+    }
+    if ( $match = "ABC" ){
+        # mastodonInboxFilter に中継する
+        proxy_pass http://XXX.XXX.XXX.XXX:XXXX;
+    }
+    if ( $match != "ABC" ){
+        # mastodonサーバに中継する
+        proxy_pass http://YYY.YYY.YYY.YYY:YYYY;
+    }
+```
+After making changes, run `sudo service nginx configtest` to validate config and if everything looks okay, run `sudo service nginx restart`.
