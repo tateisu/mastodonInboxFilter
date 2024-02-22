@@ -171,7 +171,7 @@ kill `cat mastodonInboxFilter.pid`
 When the server receives the TERM signal, it exits after some cleanup.
 
 ### Log
-It is output to mastodonInboxFilter.log specified at startup.
+Log is output to `mastodonInboxFilter.log` specified at startup.
 
 example:
 ```
