@@ -36,16 +36,16 @@ fun String.toAPStatus(
     when(val type = root.string("type")){
         "Create" -> Unit
         else->{
-            log.warn("$warnPrefix root.type is $type. id=${root.string("id")}")
+            log.debug("$warnPrefix root.type is $type. id=${root.string("id")}")
             return null
         }
     }
 
-    val obj = root.jsonObject("object") ?: error("missing object.")
+    val obj = root.jsonObject("object") ?: error("missing object. $this")
     if (obj.string("type") != "Note") {
         error("obj.type is not Note. ${obj.string("type")}")
     }
-    val actor = root.string("actor") ?: error("missing actor")
+    val actor = root.string("actor") ?: error("missing actor. $this")
     val actorMatch = reMastodonActor.find(actor) ?: error("actor not match. $actor")
 
     val mentions = obj.jsonArray("tag")?.objectList()?.mapNotNull {
@@ -76,8 +76,10 @@ fun String.toAPStatus(
     return APStatus(
         aHost = actorMatch.groupValues[1],
         aUserName = actorMatch.groupValues[2],
-        content = obj.string("content") ?: error("missing content"),
-        sUrl = obj.string("url") ?: error("missing status url"),
+        content = obj.string("content") ?: error("missing content. $this"),
+        sUrl = obj.string("url") // mastodon
+            ?: obj.string("id") // https://misskey.io/notes/9q05g8osu733039l
+            ?: error("missing status url. $this"),
         mentions = mentions,
         attachments = attachments,
     )

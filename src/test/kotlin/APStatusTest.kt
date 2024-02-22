@@ -16,6 +16,11 @@ class APStatusTest {
         private val log = LoggerFactory.getLogger("APStatusTest")
     }
 
+    /**
+     * 実際に動かしてrecordフォルダに記録されたリクエストのJSONデータを読んでみる
+     * - 例外がでたらNG
+     * - SPAMが含まれるはず
+     */
     @Test
     fun apParseTest() = runTest {
         val configFile = File("./config.json5")
