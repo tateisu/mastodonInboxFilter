@@ -43,7 +43,7 @@ class APStatusTest {
             for (file in File("apParseTest").listFiles() ?: emptyArray()) {
                 if (!file.name.endsWith("-request.body")) continue
                 val status = assertDoesNotThrow("file $file") {
-                    file.readText().toAPStatus(warnPrefix = file.name)
+                    file.readText().toAPStatus(debugPrefix = file.name)
                 }
                 status ?: continue
                 val isSpam = isSpam(

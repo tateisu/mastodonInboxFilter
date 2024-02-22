@@ -38,7 +38,7 @@ suspend fun PipelineContext<Unit, ApplicationCall>.inboxProxy(
 
     val requestMethod = call.request.httpMethod
     val requestUri = call.request.uri
-    log.info("inboxProxy ${requestMethod.value} $requestUri")
+    log.debug("inboxProxy ${requestMethod.value} $requestUri")
     val incomingBody = call.receive<ByteArray>()
     val incomingHeaders = buildList {
         for (entry in call.request.headers.entries()) {
@@ -65,7 +65,7 @@ suspend fun PipelineContext<Unit, ApplicationCall>.inboxProxy(
     }
 
     try {
-        val apStatus = incomingBody.decodeToString().toAPStatus(warnPrefix = t)
+        val apStatus = incomingBody.decodeToString().toAPStatus(debugPrefix = t)
         if (apStatus != null) {
             val isSpam = isSpam(
                 status = apStatus,

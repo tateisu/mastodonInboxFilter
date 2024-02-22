@@ -29,22 +29,29 @@ private val log = LoggerFactory.getLogger("APStatus")
 
 private val reMastodonActor = """\Ahttps://([^/]+)/users/([^/]+)\z""".toRegex()
 
+/**
+ * ActivityPubのCreate Note を雑にパースする
+ * Create Note ではない場合はnullを返す
+ * - ほか必要なものがなさそうなら例外を出す
+ */
 fun String.toAPStatus(
-    warnPrefix: String,
+    debugPrefix: String,
 ): APStatus? {
     val root = decodeJsonObject()
-    when(val type = root.string("type")){
+    when (val type = root.string("type")) {
         "Create" -> Unit
-        else->{
-            log.debug("$warnPrefix root.type is $type. id=${root.string("id")}")
+        else -> {
+            log.debug("$debugPrefix root.type is $type. id=${root.string("id")}")
             return null
         }
     }
 
     val obj = root.jsonObject("object") ?: error("missing object. $this")
     if (obj.string("type") != "Note") {
-        error("obj.type is not Note. ${obj.string("type")}")
+        log.debug("$debugPrefix obj.type is not Note. ${obj.string("type")}")
+        return null
     }
+
     val actor = root.string("actor") ?: error("missing actor. $this")
     val actorMatch = reMastodonActor.find(actor) ?: error("actor not match. $actor")
 
