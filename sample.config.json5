@@ -1,0 +1,86 @@
+{
+  // このサーバが待機するホストとポート
+  listenHost: "0.0.0.0",
+  listenPort: 5555,
+
+  // スパム以外ならMastodonのサーバに投げ直す
+  // 末尾の / はつけない
+  redirectUrl : "https://your-mastodon-server:443",
+
+  // 添付データ取得時のリクエストタイムアウト(ミリ秒)
+  requestTimeoutMs: 30000,
+  // 添付データ取得時のUser-Agent
+  userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36",
+
+  // 投稿に含まれるメンション数の下限
+  mentionMin: 1,
+
+  // acct の username部分の長さの範囲
+  userNameLengthMin: 10,
+  userNameLengthMax: 10,
+
+  // フィルタ対象の添付データダイジェスト(SHA256 Base64)
+  badImageDigest: [
+    "urXJYPJA5bNKV3jjQFUu2kyqG/u2c0XTFtNO0aZ8BN0",
+    "9sLElDynRQSRAO+VRrmO6La1hFGHLU3nQycsJQPm6sk",
+    "ceEmPiv3LybS1G4e3yI26UI9Z1Kw23UskzsOqLT8MV4",
+    "B1rDSbSEWlqHcOLIR5BXHhAcwGBOMopTtQrb2+fmvtA",
+    "43znPidVdy+AR36uN6YNlAFWw0sCLUduludF63QHMY8",
+  ],
+
+  // フィルタ対象の禁止ワード
+  badText: [
+    "画像が貼れなかったのでメンションだけします",
+    "https://荒らし.com/",
+    "https://ctkpaarr.org/",
+  ],
+
+  // 添付データダイジェストが以下のものはSPAMではない。ログ出力しない。
+  skipImageDigest: [
+    "jEqQObYGWEGRVfkOtHGXe/q16ritXWa7ioqTHF5XOhc",
+    "Xt7vXLIjQ8eD/s/TN1gKbNazsEYHrvH6y9SR7hHFYTk",
+    "U/afgguCujIh2Q7gDVgc0kEQzDYf9eDCXfhgcsMhnM4",
+  ],
+
+  // actorのusernameが以下のものはSPAMではない。ログ出力しない。
+  // (諸事情で@の後ろはAPドメインではなくactor url のホスト部分
+  // 今回の荒らしはMastodon限定なのでまず影響ないが、
+  // Misskeyではactorに表れるのはIDなので注意。skipDomain の方でホワイトリストしてほしい。
+  skipAcct: [
+    "Seraina@social.tchncs.de",
+    "emoji@don.nzws.me",
+    "kiri_bot01@kiritan.work",
+    "eks4lebwur@super-gay.co",
+    "m2aioqjxwz@mainspitze.social",
+    "nte5yxygdc@mstdn.at",
+    "obpy9b6y9j@penfount.social",
+    "tmqhjmps5m@closednetwork.social",
+    "Goalkeeper@nicecrew.digital",
+  ],
+
+  // actorのURLののホスト部分が以下のものはSPAMではない。ログ出力しない。
+  skipDomain: [
+    // 誤判定回避
+    "best-friends.chat",
+    "flower.afn.social",
+    "machikadon.online",
+    "mastodon.social",
+    "mi.nakn.jp",
+    "misskey-square.net",
+    "misskey.io",
+    "mstdn.fujii-yuji.net",
+    "mstdn.jp",
+    "mstdn.social",
+    "mstdn.y-zu.org",
+    "outerheaven.club",
+    "pokemon.mastportal.info",
+    "social.vivaldi.net",
+    "vivaldi.net",
+    // リモート鯖缶により対応済み
+    "terere.social",
+    "xn--zck4ad5f2e.xn--q9jyb4c",
+    // ブロック済み
+    "mastodon-ero.xyz",
+    "kokuusa.club",
+  ],
+}

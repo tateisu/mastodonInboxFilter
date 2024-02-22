@@ -1,0 +1,12 @@
+Host: mastodon2.juggler.jp
+X-Real-IP: 78.47.65.118
+X-Forwarded-For: 78.47.65.118
+X-Forwarded-Proto: https
+Connection: close
+Content-Length: 3508
+User-Agent: http.rb/5.1.1 (Mastodon/4.3.0-nightly.2024-02-17-security; +https://mastodon.social/)
+Date: Thu, 22 Feb 2024 00:00:50 GMT
+Accept-Encoding: gzip
+Digest: SHA-256=XCPCaF8b/pkrDAFaTL085DFtgBXgw+CghmTZxrcrcuw=
+Content-Type: application/activity+json
+Signature: keyId="https://mastodon.social/users/PCMag#main-key",algorithm="rsa-sha256",headers="(request-target) host date digest content-type",signature="cUsBYvn+UrWGBCDtZhdg6bjpwhwHHqDPQLaJsuwg0kwEWSqoK0Q2M68sTr9K7Bfgf31xI6F+Fdey+EIzIn7NH/7y63sFrxqUlRKTbjthw8kyKEOwHA1JY70szlIq5ut5IS1pRX12rNflGeh3Sy6gVt201qkTus2hwFFy7vWPaYsJPd3lVSk53HtG7h8b7qQRACYxOfnq0b1WJprZj9toe/JB+zs8DHkDGQTVO8DUrUT+BwVmgBuGraCY/HEamaXIkbrYDCXsMp6aMXUgYPulXvgmyWcEqDU8l4NOjwN+UPbxLnywkCqyzYIRNDja7hexii0iF9RnbFashEv5z2lLNw=="

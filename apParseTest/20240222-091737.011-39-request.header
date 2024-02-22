@@ -1,0 +1,12 @@
+Host: mastodon2.juggler.jp
+X-Real-IP: 159.69.187.169
+X-Forwarded-For: 159.69.187.169
+X-Forwarded-Proto: https
+Connection: close
+Content-Length: 783
+User-Agent: http.rb/5.1.1 (Mastodon/4.3.0-nightly.2024-02-17-security; +https://mastodon.social/)
+Date: Thu, 22 Feb 2024 00:17:35 GMT
+Accept-Encoding: gzip
+Digest: SHA-256=vsMgRExyTZ6OkWrZ0jx/PSSgcfQHGXYC8OgVr+r7I2A=
+Content-Type: application/activity+json
+Signature: keyId="https://mastodon.social/users/realGSarasy#main-key",algorithm="rsa-sha256",headers="(request-target) host date digest content-type",signature="Qh3TgZzown/0R+snsotkxFpyDv7y9IVvDx47GMdDisdUzdq+52K+CV++2CRTqpZNXSXG8IQCHjOBfc5s3pxiWrw2NXM42d+ieMaLRlzfjXdSjx6HST7NMxfgJt24S0pcdQ7e1AQ81dUrZbsZ+z8debS5QX3VgXQwyH+0iT092CgTRpx6xh4Af/w4Wxw3V2F8M9zastkdmu8I0as7U7bodjl/yJTWrK4/NPagVJuT9s3LWQaJUvfqFe4wrc3+/dLUHrsZ8flVhmttPznrCXnxjP7iOOB2wW78JcDUEEYAPXj0bLJj5k8U/DC7i8XOUY/G+Qc8Cq6GzgchS/SD5BXH8Q=="

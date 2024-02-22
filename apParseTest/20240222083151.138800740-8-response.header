@@ -1,0 +1,15 @@
+Server: Mastodon
+X-Frame-Options: DENY
+X-Content-Type-Options: nosniff
+X-XSS-Protection: 0
+Referrer-Policy: same-origin
+Vary: Authorization
+Content-Type: text/html
+Cache-Control: private, no-store
+Content-Security-Policy: default-src 'none'; frame-ancestors 'none'; form-action 'none'
+X-Request-Id: f90d97b3-c08a-40e6-8ffc-e931c7fbf28f
+X-Runtime: 0.017318
+Strict-Transport-Security: max-age=63072000; includeSubDomains
+Connection: close
+Transfer-Encoding: chunked
+Status: 202 Accepted

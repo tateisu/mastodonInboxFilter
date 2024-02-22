@@ -1,0 +1,12 @@
+Host: mastodon2.juggler.jp
+X-Real-IP: 195.201.243.187
+X-Forwarded-For: 195.201.243.187
+X-Forwarded-Proto: https
+Connection: close
+Content-Length: 4719
+User-Agent: http.rb/5.1.1 (Mastodon/4.1.15; +https://mstdn.jp/)
+Date: Thu, 22 Feb 2024 00:06:42 GMT
+Accept-Encoding: gzip
+Digest: SHA-256=WQydlX7KaNrtClbIWj+Uem8jK7/PnqbeonXOAP0T5N8=
+Content-Type: application/activity+json
+Signature: keyId="https://mstdn.jp/users/hakone_garasunomori#main-key",algorithm="rsa-sha256",headers="(request-target) host date digest content-type",signature="KWRnQeHIdtdXxv4FLxP7WZQ41RGlRzHNq7heX6aFx4mGJcLX9gzaMFsu3ICjGqEQ2vCe9mGCju0ywhJ+w2FhTMJPRg6Yl4s2SGhJwxCZ9nNm5F8iuVqnxSkYbe7D7yepa4LxSJNRXwnHgqd/o59pxsMN3Kpv/fvz2aPpMWHOBXy/XRa5cCs2KNqFmtuifLHCOXT6W4Nw9pSgAPhD9F21uIrbeytNiZTsdZtqsAjiEHCshtIk2iZSUzpI6nun+ofAj9EWBM2NSzkVBt5bjXQ1yA/WO84JXN0afij/WQtc7dEdYrEz88AbfIPwJv4I7ASKECzTIX/I/c617KTscAJwEg=="

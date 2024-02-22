@@ -1,0 +1,13 @@
+Host: mastodon2.juggler.jp
+X-Real-IP: 139.162.87.235
+X-Forwarded-For: 139.162.87.235
+X-Forwarded-Proto: https
+Connection: close
+Content-Length: 1807
+User-Agent: http.rb/5.1.1 (Mastodon/4.3.0-alpha.3; +https://taruntarun.net/)
+Date: Wed, 21 Feb 2024 23:57:42 GMT
+Accept-Encoding: gzip
+Digest: SHA-256=0ALIlx0JRNm/sR4Lrq2XZa7q8CVRbc6uLPSxSJWd1HQ=
+Content-Type: application/activity+json
+Collection-Synchronization: collectionId="https://taruntarun.net/users/mayaeh/followers", digest="07594f2218e8a88acfbaaf22ff46716f4ae1c5acc10bbd7f77adbd41943d8fc0", url="https://taruntarun.net/users/mayaeh/followers_synchronization"
+Signature: keyId="https://taruntarun.net/users/mayaeh#main-key",algorithm="rsa-sha256",headers="(request-target) host date digest content-type collection-synchronization",signature="UjQdIMwy/pTjSgVT5sYwIv2NDe6iNs2J1g1iiB6siQk/HXpzX28v3tuyXpy1HAEPkqKDxEvDh5Lzlo6j1Voc6cLcPCEnuGHnWQvZUVeZ2TWsDnNJH91FWug7FDIZhDAjrpFZ52rkezJUJ6QuAQ9ptdt2HTTLwcj+PHPR0/XfuyxK3Bp1hcsp0PL7y6KEj7xaSjKdOzEXvITFcp0aKjYNBnBNi12ayz5HAG+1dLoMw6glxb9seeqwcI6B9bOXmw9iOg3FykhxuGEzZHnz7B8QcjH78NinD7M46HE7ybwk24GgrMuU7OCPvKCkbGSbrFn9xHiiBxr4U2SZV4bd337AYQ=="

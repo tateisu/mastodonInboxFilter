@@ -1,0 +1,12 @@
+Host: mastodon2.juggler.jp
+X-Real-IP: 49.13.112.22
+X-Forwarded-For: 49.13.112.22
+X-Forwarded-Proto: https
+Connection: close
+Content-Length: 2833
+User-Agent: http.rb/5.1.1 (Mastodon/4.3.0-nightly.2024-02-17-security; +https://mastodon.social/)
+Date: Wed, 21 Feb 2024 23:31:49 GMT
+Accept-Encoding: gzip
+Digest: SHA-256=Mn7XI5zBhO2hHXrPAUJ85FVYMn9s2vDwYvw+PRIFKv4=
+Content-Type: application/activity+json
+Signature: keyId="https://mastodon.social/users/tateisu#main-key",algorithm="rsa-sha256",headers="(request-target) host date digest content-type",signature="oMkETzCW34utAYcuo1q77afpp8+GAyGbb3Rmq8iEM0wGR8lsFg3WpxFN+rs+thjtG8OwgEIXYomcpx5CMFaD91v2jcIkMOuWMeSoF6Tbl6qxdrgPAMmN/q54GI+0ihiQJ6NdkCqLMDcqe0fg/0kM1sRM/+0kr95uuTjmFtHOQJge/nCDZQUFAQC+JB5IXtUL4U5s4/CDEQX0F6zix0vpquAEV9DOitT+R6PNlkGqWxIJI9rPR1yveP6Kz8heinkWbTw4JOMhjTTyKzQRCPpMoY62GbHwyqFeqkx4zlxYjgt/xlPNOrpGiiv6VlIW2rT0YWeJJysWhgIjE3BvExIH4g=="

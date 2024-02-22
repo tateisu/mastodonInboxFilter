@@ -1,0 +1,13 @@
+Host: mastodon2.juggler.jp
+X-Real-IP: 160.16.127.180
+X-Forwarded-For: 160.16.127.180
+X-Forwarded-Proto: https
+Connection: close
+Content-Length: 2575
+User-Agent: http.rb/5.1.1 (Mastodon/4.2.7; +https://mastodon.juggler.jp/)
+Date: Wed, 21 Feb 2024 23:22:50 GMT
+Accept-Encoding: gzip
+Digest: SHA-256=ofjOriAuwtRsqRwc37ULGvgPBWGbcTLCy5wbSofhoik=
+Content-Type: application/activity+json
+Collection-Synchronization: collectionId="https://mastodon.juggler.jp/users/tateisu/followers", digest="07594f2218e8a88acfbaaf22ff46716f4ae1c5acc10bbd7f77adbd41943d8fc0", url="https://mastodon.juggler.jp/users/tateisu/followers_synchronization"
+Signature: keyId="https://mastodon.juggler.jp/users/tateisu#main-key",algorithm="rsa-sha256",headers="(request-target) host date digest content-type collection-synchronization",signature="IQ6sQ0XcktkOMdyX5GvFGMiKO7LEd8yd5k0dbmjoPBIDsuSbqar7YIWnZxUPiUdyKkWHMQeHQmDw589Mgg5HW7MYMC5vVtWH50XKzr1E11ObucQPWh295h3RdjPQ9/yjO7m+c4L1CAgdY8JPK33+YVlFIKE3d9vYJ2Tgs4Wuy0koL1MgGcqt46KCzZTxfAJq5TvEObgvam0aps7y8l99gUkq4oi1NtQ40u6YtI0rHpomj/27V7rXw2iKGuSOXwKVySqnV5nfMW/GXS9xTpQmNyI3fni1SHcZ3SSWvDrAhg0oE/GVTDHIOEEYQK7rP1vxDz1Peg6pN9rnDKygVJZoKA=="

@@ -1,0 +1,12 @@
+Host: mastodon2.juggler.jp
+X-Real-IP: 45.32.13.130
+X-Forwarded-For: 45.32.13.130
+X-Forwarded-Proto: https
+Connection: close
+Content-Length: 2061
+user-agent: Misskey/10.102.690-m544 (https://misskey.m544.net)
+date: Wed, 21 Feb 2024 23:28:47 GMT
+content-type: application/activity+json
+digest: SHA-256=EmC3g5UBJO6iWOKen47zRaX2kQ7yWCvxl0YHnrG2dx0=
+signature: keyId="https://misskey.m544.net/users/5b78ea54e0aa37683719f252#main-key",algorithm="rsa-sha256",headers="(request-target) date host digest",signature="i7Xn3mZRIQII85UMdoDyhS9PCBy/ETtO4fkPmbZT75LTTaclxbtg7X9gectYU3NxjvFlAh5j6ITWKmiZsQvWSQ0VGYJU+6FNGez0QBONOXyDVB/6bRUAglZIPhSJH46PYP/YwClpl5np+nnucorclmHVof9GUenzZPQ+0tEQEguFDBJsZRtwtpIZ6Ttm/fSLF+EQCTBZLok19Ks/L7d4K3vJDujDLvApuW/qspC7GlBfG2155ePcGDQNFME2arDl24la/hIW22IwAWY9aJNUhIcdyMw0suoNoNReJRRj9KPaf79Htr6y17TWBphAHYmm5z7jcEEYJ57Byu0h36BzcQ=="
+accept-encoding: gzip, deflate, br

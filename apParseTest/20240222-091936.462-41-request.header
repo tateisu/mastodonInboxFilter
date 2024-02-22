@@ -1,0 +1,12 @@
+Host: mastodon2.juggler.jp
+X-Real-IP: 54.37.253.206
+X-Forwarded-For: 54.37.253.206
+X-Forwarded-Proto: https
+Connection: close
+Content-Length: 5839
+User-Agent: http.rb/5.1.1 (Mastodon/4.2.7; +https://bondsdogs.com/)
+Date: Thu, 22 Feb 2024 00:19:35 GMT
+Accept-Encoding: gzip
+Digest: SHA-256=hX7JkRos9eX17F26B4S15p81ZF8el97UofNfRKfZMlo=
+Content-Type: application/activity+json
+Signature: keyId="https://bondsdogs.com/users/swflm12apm#main-key",algorithm="rsa-sha256",headers="(request-target) host date digest content-type",signature="n4R78y3lbsdyMHigfCA1NxKeQySbZLoDBo94VUPnIIOdKzn+CYWahn5qOOoDA3ixq7ydaAGz5Hv6BSwelf3rUA30cpgJYT6T0JetfRdVTxryHoYuuzOXm8lm9KZdf7jKobTNcirc7TQ1+Z8hlQes04NRkioEewdliRqelI++hVqxhKqc9z5aqod0js4cfCBKsG6QpomOU2WCULOoTZUlWZ4lImoziW8nVIA1hjqmRFYDzYNk0iDRNEu0k0EMy496Y0fEURbiGsSWA05FMyNzKnhIw/7rR/8AJxF66ptJyNOr2G7uIIj/LAbZI0U/Mv06MRuZ6ot3mOT6zz5gKfnxHw=="

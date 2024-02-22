@@ -1,0 +1,12 @@
+Host: mastodon2.juggler.jp
+X-Real-IP: 168.119.49.146
+X-Forwarded-For: 168.119.49.146
+X-Forwarded-Proto: https
+Connection: close
+Content-Length: 2400
+User-Agent: http.rb/5.1.1 (Mastodon/4.3.0-nightly.2024-02-17-security; +https://mastodon.social/)
+Date: Thu, 22 Feb 2024 00:07:02 GMT
+Accept-Encoding: gzip
+Digest: SHA-256=QWaIS0uNz2PLhHsN/t7hiAzSrpWVlxVk7tnVJTSXGKc=
+Content-Type: application/activity+json
+Signature: keyId="https://mastodon.social/users/Mastodon#main-key",algorithm="rsa-sha256",headers="(request-target) host date digest content-type",signature="Iw6pl3G8oyoR/+8JeLV6UfTLcRTdJaKNZ3qFcch+jvAEt6X+XF+wFGx7OsToFWWVxsiHFNkrsi3BFPe9DzKUBva9g26JgZxkEFlhAh7WztK4aFhuLWXns0vqiX6afTSf+B+4e+lUWpjOvWhxRTMEj/EBYg9TC3zIoutYrC0Ug6UdYWMQ4mko0f1KRxEsiXM0sIcPqYaSCVpq9mUyxxNQeh2SPyWVWDmZiHSab9GqJ+e+Q7xRYGdxMekAktWwEfcl7tVO86UFb9zhAxiXcH/sJJ5NI4YMlMomnKdFae5kGfmVAmUq0HY56j25E7OtFp7idDFLwT9RGBL3YblKXGajUA=="

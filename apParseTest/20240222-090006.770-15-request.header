@@ -1,0 +1,12 @@
+Host: mastodon2.juggler.jp
+X-Real-IP: 160.16.127.180
+X-Forwarded-For: 160.16.127.180
+X-Forwarded-Proto: https
+Connection: close
+Content-Length: 787
+User-Agent: http.rb/5.1.1 (Mastodon/4.2.7; +https://mastodon.juggler.jp/)
+Date: Thu, 22 Feb 2024 00:00:06 GMT
+Accept-Encoding: gzip
+Digest: SHA-256=N0l65YGFX0oY55Zn4RO87n2hIazrQgTar6tt8dzKAlc=
+Content-Type: application/activity+json
+Signature: keyId="https://mastodon.juggler.jp/users/iitaikot#main-key",algorithm="rsa-sha256",headers="(request-target) host date digest content-type",signature="FO3JBLUMMBORgRs0RS5rQr+eaGjXaNq3RcncJ5chEU0KJPIHuMFGtnM/hPQx3J8cgCJwOa9AyVhZBfLlEVgPSVEXA1cofV1sfW0S3AMEiEZSSOncLvncO1wD2asPhkOyrhJadOoTwtPp63mwIxW3UtiWUkZgAOFaTacp7aXlfCfMFgVQbXqLu04Iau2IhoBAdbTKDwfducGxxF6Mhjvzqo+X7jomCPLqiphRXRwztD1Y4eRoAkD60lfMozQ+edu1n+6Co2DMI7a2mM6hL2AgrXfqRgr0t/juA5UREk8NvsEkeWv9mxWM1MjyR5eeqDMOChZXuyEU8N8y/Xk8WVtSTQ=="

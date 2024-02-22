@@ -1,0 +1,12 @@
+Host: mastodon2.juggler.jp
+X-Real-IP: 151.236.32.133
+X-Forwarded-For: 151.236.32.133
+X-Forwarded-Proto: https
+Connection: close
+Content-Length: 5682
+User-Agent: http.rb/5.1.0 (Mastodon/4.0.2; +https://edusocial.it/)
+Date: Wed, 21 Feb 2024 23:58:09 GMT
+Accept-Encoding: gzip
+Digest: SHA-256=QHY4s1639OziAkPfmpKPeTZwGaOnH5M8HWfnwL0MIqU=
+Content-Type: application/activity+json
+Signature: keyId="https://edusocial.it/users/btjcwrbzin#main-key",algorithm="rsa-sha256",headers="(request-target) host date digest content-type",signature="i/DlTZ9ayc2IdbT9R7qDbx5hrhaorTkU19H5/an3Z2l/Ng+l8W4gUMqT2ZUM2MnYrmNWAXN5wkil+QddWOXevdqV1uwAY8igW3rdkEFFw+1NihN9TNIo9PST0WUWqDNZqYgQjJ8DQjB2h7oeHR9MeqZ4wTapKhbioiJ5jGJQj2LulVhYExxM3Wx5DhrgiI4s8JoZNhM1+88qmoKVC/DsxlA/k2sT8qruj2sgemdMPsMb3Q07NkXJaklf48Ns9uwnsrrbptXSYYbgSceBWzw0Hlv3aztDZ5XbLx13taqaB0SIrjM7jALQJJvdndYO6+LuHL//Vuqvdz5/qAVjg9cgDQ=="

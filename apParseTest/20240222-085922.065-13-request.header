@@ -1,0 +1,12 @@
+Host: mastodon2.juggler.jp
+X-Real-IP: 139.162.87.235
+X-Forwarded-For: 139.162.87.235
+X-Forwarded-Proto: https
+Connection: close
+Content-Length: 473
+User-Agent: http.rb/5.1.1 (Mastodon/4.3.0-alpha.3; +https://taruntarun.net/)
+Date: Wed, 21 Feb 2024 23:59:22 GMT
+Accept-Encoding: gzip
+Digest: SHA-256=h0jovI1e/54j28UasbLwM0j0AHt5rhNkO7Js+530Abw=
+Content-Type: application/activity+json
+Signature: keyId="https://taruntarun.net/users/mayaeh#main-key",algorithm="rsa-sha256",headers="(request-target) host date digest content-type",signature="l7u4h33dLtG4b/eZdImsnByihKrn4bSmwgIDY+LNxexRoNh/szQg9b2XasWmc2qCH9GNMIIIRy+xB38FsvPmM4kpBPFpVUfuUKQxA4GGgTXX/m0shBDzaDOaEG6wjAxtTY5rfSFh7pba/vgguScHHvQyNzmhlNM6+U8yjMpb3QOEZ4CQ0OWLu2dkuCWkX72nsBD5Y8Qkd6kTV7WiKkpgNOcRuKv+9i3X7BvDKMT1M0acFMA3p9QxyDVUwl+LklJp9Kg1DYiaZpVz4mN5U3NhgTKQHkTGKAQCjzdz4M//xSxCBjIJMtsVurHhYO2BOTrnmROXFE8hikreoKCxzArgsw=="

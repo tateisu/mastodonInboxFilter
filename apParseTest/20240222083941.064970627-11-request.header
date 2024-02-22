@@ -1,0 +1,12 @@
+Host: mastodon2.juggler.jp
+X-Real-IP: 54.150.180.39
+X-Forwarded-For: 54.150.180.39
+X-Forwarded-Proto: https
+Connection: close
+Content-Length: 739
+User-Agent: http.rb/5.1.1 (Mastodon/4.1.15; +https://pawoo.net/)
+Date: Wed, 21 Feb 2024 23:39:41 GMT
+Accept-Encoding: gzip
+Digest: SHA-256=to76TMufFed00GRDlwtt+NQsABSC1BsUSoVwNrcv+Qc=
+Content-Type: application/activity+json
+Signature: keyId="https://pawoo.net/users/Nihica#main-key",algorithm="rsa-sha256",headers="(request-target) host date digest content-type",signature="GP1gc1N/CeiXQmOEHtl/WRy/brYVm2bq4QqTMwcjpzrKtGOQgweaC84hIHmcUCV/aNrhZcYL5pkge4Iec0bKTnbf3dC2YVUQDr7vwGqB8lFgZDn2X+PZSQ2q8GVRdSOyDNIlIoCKD5Oag9KEDV4FfY9T74K60jwz2QOFC8iUOFN2hLjv/TCcoP5iHW8Z14VYFc+lQndtCwyLGDJ2QR6Qp+imzxGD8jixx2sgGiiVrUvbdZzeVcn8bm+hxjUAqtP8vBoMJ4xgnOlroIZRxGxaA7W3x4lmOpDf+D+cSRZPRcCYh0n6AzE15D745QKlAQDr/HY0xys+PJtcObUIoGnfZQ=="

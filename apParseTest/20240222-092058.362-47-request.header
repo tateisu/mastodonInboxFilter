@@ -1,0 +1,12 @@
+Host: mastodon2.juggler.jp
+X-Real-IP: 54.37.82.157
+X-Forwarded-For: 54.37.82.157
+X-Forwarded-Proto: https
+Connection: close
+Content-Length: 5888
+User-Agent: http.rb/5.1.1 (Mastodon/4.2.7; +https://tambayan.us/)
+Date: Thu, 22 Feb 2024 00:20:56 GMT
+Accept-Encoding: gzip
+Digest: SHA-256=cl9Nb/A09oLrCzNdjppJRQG635r1CE19TK3hvfD12qM=
+Content-Type: application/activity+json
+Signature: keyId="https://tambayan.us/users/e8jnod7axt#main-key",algorithm="rsa-sha256",headers="(request-target) host date digest content-type",signature="Rs/CAIDKc4EgDp8REI4n1F8ywH4DGhi1IglQEXlVwPQv4oq+07U9cETMbHStreyK6uz4x8Jzok+ELuPY6HMTDKM2DkwxWKNKRuj2V21NZ/+VsIpK1M1y7os7o37PvMZyKwcXYyO+jNxApcXl0lsB9V2xx4CfXu7MtTFaA49Y3lEFlFiWZLQnGUnqQ9IezH43Ho3mzObJxCsTeUx2Kv01RGhl25Lrz7zl5jDMdCOAY1mCzT8S7+aYQH7MVj7aqlUGA8R1zg2YlaC+uc3F+RgV7nljhO9bFExDwYAwuRgnkn+rIE0ODhR+nw3C2NRs3ceaO2XGGQ85rmu9xltO7XmLwg=="

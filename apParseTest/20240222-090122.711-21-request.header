@@ -1,0 +1,12 @@
+Host: mastodon2.juggler.jp
+X-Real-IP: 162.55.40.80
+X-Forwarded-For: 162.55.40.80
+X-Forwarded-Proto: https
+Connection: close
+Content-Length: 783
+User-Agent: http.rb/5.1.1 (Mastodon/4.3.0-nightly.2024-02-17-security; +https://mastodon.social/)
+Date: Thu, 22 Feb 2024 00:01:21 GMT
+Accept-Encoding: gzip
+Digest: SHA-256=gMAsf1Xz0pgH+Lizybnliv/hZP62TiXiuUbc/+Gvlvg=
+Content-Type: application/activity+json
+Signature: keyId="https://mastodon.social/users/Piano_piano#main-key",algorithm="rsa-sha256",headers="(request-target) host date digest content-type",signature="N7/8oly3Nm0aDDFLAaTOslQLF+T7hbDch6w4564APn8Ph9Q6dy7q3Rcl2EqjdEihVxAHpbaQyPmxlkLKJBvGEBCD4nDXDBPDVW613HiMgV5ss57A5qoYkUTiPoIC+lnZpWkkATgan3LODEWy6BvW+C6cI6mRTmMOy8Pam4r9P69Arck7UMBd1yKM8uq7C4du5oov3ICD5CF/YfvTfcnNAPTNGVlKw0AcY7Vbrlh26PfSWPRNG+4MdR8Luk6H7zLOg6BWsJ5kc34SbtJF6pu8cMKcof3kvwLs/ZIWAHIXdWt29o+Q9BQipMTgVGlEF9ERIjUXYN0khgs90CVy/953Ew=="

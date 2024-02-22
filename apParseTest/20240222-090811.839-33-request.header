@@ -1,0 +1,12 @@
+Host: mastodon2.juggler.jp
+X-Real-IP: 49.12.208.31
+X-Forwarded-For: 49.12.208.31
+X-Forwarded-Proto: https
+Connection: close
+Content-Length: 795
+User-Agent: http.rb/5.1.1 (Mastodon/4.3.0-nightly.2024-02-17-security; +https://mastodon.social/)
+Date: Thu, 22 Feb 2024 00:08:10 GMT
+Accept-Encoding: gzip
+Digest: SHA-256=2TlErUJSJfXyfXi7Qc1KO6azUzVQthIxPzBEIE5d68w=
+Content-Type: application/activity+json
+Signature: keyId="https://mastodon.social/users/aims_queenstar#main-key",algorithm="rsa-sha256",headers="(request-target) host date digest content-type",signature="T7IBFviGV9859Wbv2cFgbAsZXQiMRlcmXf2p2IyCy6ZphXumcABr1Yq9hlLuKu8SNIITCJfQ7fitIz0NdmHjWrm+LGLdCmDewZbPUmCfKxypCJS7Legwux6NfmzhiF04ycv4Z/J+Rk5n1t4qrL3cIayEn/bZ2iNXnVuvKEiQmVE1KS+1J5ppdy6dHR5LTtg7Tgr6TkmFD5h+haJ8Dvu1b5UXcIz05BoiSvcKKVrsCuxQV4SkrS61E5+4mmT3/TKIo5f9oqEmaI+OqzjH4jPcWbQ74LgaHr4/EWwhy1Rn9Ogj4szn5xyeYb1YZU1PXPgPW2msb5pO1eGVaIXdgeRuJw=="
