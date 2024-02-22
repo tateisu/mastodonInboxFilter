@@ -19,6 +19,7 @@ import io.ktor.server.response.respondText
 import io.ktor.util.pipeline.PipelineContext
 import kotlinx.coroutines.channels.Channel
 import org.slf4j.LoggerFactory
+import util.decodeJsonObject
 import java.io.File
 
 private val log = LoggerFactory.getLogger("InboxProxy")
@@ -40,103 +41,80 @@ suspend fun PipelineContext<Unit, ApplicationCall>.inboxProxy(
     val requestUri = call.request.uri
     log.debug("inboxProxy ${requestMethod.value} $requestUri")
     val incomingBody = call.receive<ByteArray>()
-    val incomingHeaders = buildList {
-        for (entry in call.request.headers.entries()) {
-            for (value in entry.value) {
-                add(Pair(entry.key, value))
-            }
-        }
+    val incomingHeaders = call.request.headers.toSaveHeaders()
+
+    val extraHeaders = SaveMessage.SaveHeaders().apply {
+        add("Request" to "$requestMethod $requestUri")
     }
 
+    val saveMessage = SaveMessage(
+        time = t,
+        extraHeaders = extraHeaders,
+        requestHeaders = incomingHeaders,
+        requestBody = incomingBody,
+    )
     try {
-        saveMessageChannel.send(
-            SaveMessage(
-                type = "request",
-                time = t,
-                body = incomingBody,
-                headers = incomingHeaders,
-                headersExtra = listOf(
-                    "Request" to "$requestMethod $requestUri",
+        // spamチェック
+        try {
+            val apStatus = incomingBody.decodeToString().decodeJsonObject().toAPStatus(debugPrefix = t)
+            if (apStatus != null) {
+                val isSpam = isSpam(
+                    status = apStatus,
+                    cacheDataDir = cacheDataDir,
+                    cacheErrorDir = cacheErrorDir,
+                    httpClient = httpClient,
+                    config = config,
                 )
-            )
-        )
-    } catch (ex: Throwable) {
-        log.warn("can't post SaveMessage.", ex)
-    }
-
-    try {
-        val apStatus = incomingBody.decodeToString().toAPStatus(debugPrefix = t)
-        if (apStatus != null) {
-            val isSpam = isSpam(
-                status = apStatus,
-                cacheDataDir = cacheDataDir,
-                cacheErrorDir = cacheErrorDir,
-                httpClient = httpClient,
-                config = config,
-            )
-            if (isSpam) {
-                call.respondText(
-                    status = HttpStatusCode.Accepted,
-                    contentType = ContentType.Text.Plain,
-                    text = "automatic spam detection.",
-                )
-                return
+                if (isSpam) {
+                    call.respondText(
+                        status = HttpStatusCode.Accepted,
+                        contentType = ContentType.Text.Plain,
+                        text = "automatic spam detection.",
+                    )
+                    return
+                }
             }
+        } catch (ex: Throwable) {
+            log.warn("can't check spam.", ex)
         }
-    } catch (ex: Throwable) {
-        log.warn("can't check spam.", ex)
-    }
 
-    // Mastodonサーバに投げて
-    val originalResponse = httpClient.request {
-        method = requestMethod
-        url(config.redirectUrl + requestUri)
-        for (pair in incomingHeaders) {
+        // Mastodonサーバに投げる
+        val originalResponse = httpClient.request {
+            method = requestMethod
+            url(config.redirectUrl + requestUri)
+            for (pair in incomingHeaders) {
+                when {
+                    skipHeaders.contains(pair.first.lowercase()) -> Unit
+                    else -> header(pair.first, pair.second)
+                }
+            }
+            setBody(incomingBody)
+        }
+        val outgoingBody = originalResponse.readBytes()
+        val outgoingHeaders = originalResponse.headers.toSaveHeaders()
+
+        extraHeaders.add("Status" to originalResponse.status.toString())
+        saveMessage.responseHeaders = outgoingHeaders
+        saveMessage.responseBody = outgoingBody
+
+        // Mastodonからの応答を呼び出し元に返す
+        for (pair in outgoingHeaders) {
             when {
+                pair.first == HttpHeaders.ContentType -> Unit
                 skipHeaders.contains(pair.first.lowercase()) -> Unit
-                else -> header(pair.first, pair.second)
+                else -> call.response.header(pair.first, pair.second)
             }
         }
-        setBody(incomingBody)
-    }
-    val outgoingBody = originalResponse.readBytes()
-    val outgoingHeaders = buildList {
-        for (entry in originalResponse.headers.entries()) {
-            for (value in entry.value) {
-                add(Pair(entry.key, value))
-            }
-        }
-    }
-
-    // 応答を呼び出し元に返す
-    for (pair in outgoingHeaders) {
-        when {
-            pair.first == HttpHeaders.ContentType -> Unit
-            skipHeaders.contains(pair.first.lowercase()) -> Unit
-            else -> call.response.header(pair.first, pair.second)
-        }
-    }
-    call.respondBytes(
-        contentType = originalResponse.contentType(),
-        status = originalResponse.status
-    ) {
-        outgoingBody
-    }
-
-
-    try {
-        saveMessageChannel.send(
-            SaveMessage(
-                type = "response",
-                time = t,
-                body = outgoingBody,
-                headers = outgoingHeaders,
-                headersExtra = listOf(
-                    "Status" to "${originalResponse.status}",
-                )
-            )
+        call.respondBytes(
+            contentType = originalResponse.contentType(),
+            status = originalResponse.status,
+            provider = { outgoingBody },
         )
-    } catch (ex: Throwable) {
-        log.warn("can't post SaveMessage.", ex)
+    } finally {
+        try {
+            saveMessageChannel.send(saveMessage)
+        } catch (ex: Throwable) {
+            log.warn("can't post SaveMessage.", ex)
+        }
     }
 }

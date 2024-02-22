@@ -1,6 +1,7 @@
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.plugins.expectSuccess
+import io.ktor.client.request.HttpRequestBuilder
 import io.ktor.client.request.request
 import io.ktor.client.request.url
 import io.ktor.client.statement.HttpResponse
@@ -13,24 +14,27 @@ import java.io.ByteArrayOutputStream
 import java.io.File
 import kotlin.coroutines.cancellation.CancellationException
 
+private val reBadChars = """[\x00-\x20?*:<>\\\/"|]""".toRegex()
+
 suspend fun cachedGet(
     cacheDataDir: File,
     cacheErrorDir: File,
     httpClient: HttpClient,
     url: String,
     sizeLimit: Int? = null,
+    requestInitializer: (HttpRequestBuilder.()->Unit)? = null
 ): ByteArray {
-    val reBadChars = """[\x00-\x20?*:<>\\\/"|]"""
-    val name = url.replace(reBadChars, "-")
+    val name = reBadChars.replace(url, "-")
     val fData = File(cacheDataDir, name)
     val fError = File(cacheErrorDir, name)
     if (fData.isFile) return fData.readBytes()
-    if (fError.isFile) error(fData.readText())
+    if (fError.isFile) error(fError.readText())
     try {
         val res: HttpResponse = httpClient.request {
             expectSuccess = true
             method = HttpMethod.Get
             url(url)
+            requestInitializer?.invoke(this)
         }
         val body = when {
             sizeLimit == null -> res.readBytes()

@@ -54,13 +54,42 @@ suspend fun isSpam(
         return false
     }
 
-    // TODO AP uri からドメインを解決するべき
+    // ここのacctは不正確。misskeyだと id@host になるし、 mastodonだと@の後ろが vivaldi.net ではなく social.vivaldi.net になる
+    // APベースだと正しいacctを取得するにはWebFingerの追加のリクエストが必要だが、実行コストを下げたい
     val acct = "${status.aUserName}@${status.aHost}"
-
     if (config.skipAcctSet.contains(acct)) {
         return false
     }
 
+    // 本文のHTMLをテキストにする。改行やメンションは空白にする。
+    val document = Jsoup.parse(status.content)
+    for (br in document.getElementsByTag("br")) {
+        br.replaceWith(TextNode(" "))
+    }
+    for (a in document.getElementsByTag("a")) {
+        val clazz = a.attr("class") ?: ""
+        when {
+            clazz == "u-url mention" -> a.replaceWith(TextNode(" "))
+
+            // 特に何もしない
+            clazz.contains("hashtag") -> Unit
+
+            // リンクは表示文字列を実URLに展開する
+            else -> a.attr("href").takeIf { it.isNotEmpty() }
+                ?.let { a.replaceWith(TextNode(" $it ")) }
+        }
+    }
+
+    val text = document.text().trim().replace(reSpaces, " ")
+
+    // 禁止ワードを含むか調べる
+    val matched = config.badText?.filter { keyword -> text.contains(keyword) }
+    if (!matched.isNullOrEmpty()) {
+        logStatus("NG", "<word: ${matched.joinToString(", ")}>", status, text)
+        return true
+    }
+
+    // 画像ダイジェストのマッチ
     val imageDigests = status.attachments?.filter {
         it.mediaType.startsWith("image/")
     }?.mapNotNull {
@@ -91,45 +120,16 @@ suspend fun isSpam(
     }?.filter {
         !config.skipImageDigestSet.contains(it)
     }
-
-    // 本文のHTMLをテキストにする。改行やメンションは空白にする。
-    val document = Jsoup.parse(status.content)
-    for (br in document.getElementsByTag("br")) {
-        br.replaceWith(TextNode(" "))
-    }
-    for (a in document.getElementsByTag("a")) {
-        val clazz = a.attr("class") ?: ""
-        if (clazz == "u-url mention") {
-            a.replaceWith(TextNode(" "))
-        } else if (clazz.contains("hashtag")) {
-            // 特に何もしない
-        } else {
-            // リンクは表示文字列を実URLに展開する
-            a.attr("href").takeIf { it.isNotEmpty() }?.let {
-                a.replaceWith(TextNode(" $it "))
-            }
-        }
-    }
-    val text = document.text().trim().replace(reSpaces, " ")
-
-    // 画像ダイジェストのマッチ
     if (!imageDigests.isNullOrEmpty()) {
         val (bad, unknown) = imageDigests.partition { config.badImageDigestSet.contains(it) }
         if (bad.isNotEmpty()) {
             logStatus("NG", bad.first(), status, text)
             return true
         }
-        if (unknown.isNotEmpty()) {
-            logStatus("??", unknown.first(), status, text)
+        for (digest in unknown) {
+            logStatus("??", digest, status, text)
         }
     }
 
-    // 禁止ワードを含むか調べる
-    val matched = config.badText?.filter { keyword -> text.contains(keyword) }
-    return if (!matched.isNullOrEmpty()) {
-        logStatus("NG", "<word: ${matched.joinToString(", ")}>", status, text)
-        true
-    } else {
-        false
-    }
+    return false
 }

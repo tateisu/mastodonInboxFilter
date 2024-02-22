@@ -1,1 +1,55 @@
-{"@context":["https://www.w3.org/ns/activitystreams",{"ostatus":"http://ostatus.org#","atomUri":"ostatus:atomUri","inReplyToAtomUri":"ostatus:inReplyToAtomUri","conversation":"ostatus:conversation","sensitive":"as:sensitive","toot":"http://joinmastodon.org/ns#","votersCount":"toot:votersCount"}],"id":"https://taruntarun.net/users/mayaeh/statuses/111972229265987415/activity","type":"Create","actor":"https://taruntarun.net/users/mayaeh","published":"2024-02-22T00:10:27Z","to":["https://taruntarun.net/users/mayaeh/followers"],"cc":[],"object":{"id":"https://taruntarun.net/users/mayaeh/statuses/111972229265987415","type":"Note","summary":null,"inReplyTo":null,"published":"2024-02-22T00:10:27Z","url":"https://taruntarun.net/@mayaeh/111972229265987415","attributedTo":"https://taruntarun.net/users/mayaeh","to":["https://taruntarun.net/users/mayaeh/followers"],"cc":[],"sensitive":false,"atomUri":"https://taruntarun.net/users/mayaeh/statuses/111972229265987415","inReplyToAtomUri":null,"conversation":"tag:taruntarun.net,2024-02-22:objectId=22161796:objectType=Conversation","content":"<p>今日は朝パートナーと話していると仕事行きたくないになって明日出勤に振り替えさせてもらって VRC に長居した</p>","contentMap":{"ja":"<p>今日は朝パートナーと話していると仕事行きたくないになって明日出勤に振り替えさせてもらって VRC に長居した</p>"},"attachment":[],"tag":[],"replies":{"id":"https://taruntarun.net/users/mayaeh/statuses/111972229265987415/replies","type":"Collection","first":{"type":"CollectionPage","next":"https://taruntarun.net/users/mayaeh/statuses/111972229265987415/replies?only_other_accounts=true&page=true","partOf":"https://taruntarun.net/users/mayaeh/statuses/111972229265987415/replies","items":[]}}}}
+{
+	"@context": [
+		"https://www.w3.org/ns/activitystreams",
+		{
+			"ostatus": "http://ostatus.org#",
+			"atomUri": "ostatus:atomUri",
+			"inReplyToAtomUri": "ostatus:inReplyToAtomUri",
+			"conversation": "ostatus:conversation",
+			"sensitive": "as:sensitive",
+			"toot": "http://joinmastodon.org/ns#",
+			"votersCount": "toot:votersCount"
+		}
+	],
+	"id": "https://taruntarun.net/users/mayaeh/statuses/111972229265987415/activity",
+	"type": "Create",
+	"actor": "https://taruntarun.net/users/mayaeh",
+	"published": "2024-02-22T00:10:27Z",
+	"to": [
+		"https://taruntarun.net/users/mayaeh/followers"
+	],
+	"cc": [],
+	"object": {
+		"id": "https://taruntarun.net/users/mayaeh/statuses/111972229265987415",
+		"type": "Note",
+		"summary": null,
+		"inReplyTo": null,
+		"published": "2024-02-22T00:10:27Z",
+		"url": "https://taruntarun.net/@mayaeh/111972229265987415",
+		"attributedTo": "https://taruntarun.net/users/mayaeh",
+		"to": [
+			"https://taruntarun.net/users/mayaeh/followers"
+		],
+		"cc": [],
+		"sensitive": false,
+		"atomUri": "https://taruntarun.net/users/mayaeh/statuses/111972229265987415",
+		"inReplyToAtomUri": null,
+		"conversation": "tag:taruntarun.net,2024-02-22:objectId=22161796:objectType=Conversation",
+		"content": "<p>今日は朝パートナーと話していると仕事行きたくないになって明日出勤に振り替えさせてもらって VRC に長居した</p>",
+		"contentMap": {
+			"ja": "<p>今日は朝パートナーと話していると仕事行きたくないになって明日出勤に振り替えさせてもらって VRC に長居した</p>"
+		},
+		"attachment": [],
+		"tag": [],
+		"replies": {
+			"id": "https://taruntarun.net/users/mayaeh/statuses/111972229265987415/replies",
+			"type": "Collection",
+			"first": {
+				"type": "CollectionPage",
+				"next": "https://taruntarun.net/users/mayaeh/statuses/111972229265987415/replies?only_other_accounts=true&page=true",
+				"partOf": "https://taruntarun.net/users/mayaeh/statuses/111972229265987415/replies",
+				"items": []
+			}
+		}
+	}
+}

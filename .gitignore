@@ -47,6 +47,7 @@ logs/
 record/
 cache/
 apParseTest/
+testCacheDir/
 mastodonInboxFilter.jar
 mastodonInboxFilter.log
 mastodonInboxFilter.pid

@@ -1,5 +1,5 @@
 import org.slf4j.LoggerFactory
-import util.decodeJsonObject
+import util.JsonObject
 import util.notBlank
 
 class APStatus(
@@ -7,13 +7,15 @@ class APStatus(
     val aHost: String,
     // user name
     val aUserName: String,
+    // content HTML
     val content: String,
+    // status URL
     val sUrl: String,
 
     val mentions: List<Mention>?,
-    val attachments: List<Attachment>?,
 
-    ) {
+    val attachments: List<Attachment>?,
+) {
     class Mention(
         val name: String,
         val href: String,
@@ -27,17 +29,20 @@ class APStatus(
 
 private val log = LoggerFactory.getLogger("APStatus")
 
-private val reMastodonActor = """\Ahttps://([^/]+)/users/([^/]+)\z""".toRegex()
+// https://mastodon.social/users/tateisu
+// https://misskey.io/users/9iwbo5u8ow
+// https://fediverse.blog/@/mukkizignu/
+private val reMastodonActor = """\Ahttps://([^/]+)/(?:users?|@)/([^/]+)/?\z""".toRegex()
 
 /**
  * ActivityPubのCreate Note を雑にパースする
  * Create Note ではない場合はnullを返す
  * - ほか必要なものがなさそうなら例外を出す
  */
-fun String.toAPStatus(
+fun JsonObject.toAPStatus(
     debugPrefix: String,
 ): APStatus? {
-    val root = decodeJsonObject()
+    val root = this
     when (val type = root.string("type")) {
         "Create" -> Unit
         else -> {
@@ -52,8 +57,14 @@ fun String.toAPStatus(
         return null
     }
 
+    // アカウントのusername とホスト名を適当に調べる。
+    //
     val actor = root.string("actor") ?: error("missing actor. $this")
-    val actorMatch = reMastodonActor.find(actor) ?: error("actor not match. $actor")
+    val actorMatch = reMastodonActor.find(actor)
+    if (actorMatch == null) {
+        log.info("actor not match. $actor")
+        return null
+    }
 
     val mentions = obj.jsonArray("tag")?.objectList()?.mapNotNull {
         val href = it.string("href")?.notBlank()
@@ -91,3 +102,4 @@ fun String.toAPStatus(
         attachments = attachments,
     )
 }
+

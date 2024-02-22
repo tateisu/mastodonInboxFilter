@@ -62,7 +62,7 @@ fun main(args: Array<String>) {
         }
     }
     val saveMessageChannel = Channel<SaveMessage>()
-    val recordJob = EmptyScope.launch(Dispatchers.IO) {
+    val saveMessageJob = EmptyScope.launch(Dispatchers.IO) {
         consumeSaveMessage(
             recordDir = recordDir,
             channel = saveMessageChannel
@@ -96,6 +96,7 @@ fun main(args: Array<String>) {
     Runtime.getRuntime().addShutdownHook(
         object : Thread() {
             override fun run() {
+                // まずサーバの受付を止める
                 log.info("[${listenHost}:${listenPort}] server stop...")
                 server.stop(
                     gracePeriodMillis = 333L,
@@ -103,17 +104,44 @@ fun main(args: Array<String>) {
                 )
                 log.info("[${listenHost}:${listenPort}] server stopped.")
                 saveMessageChannel.close()
-                log.info("recordJob stop...")
-                runBlocking {
-                    recordJob.cancelAndJoin()
-                }
-                log.info("recordJob stopped.")
+                // 実行中の添付データ取得を止める
                 log.info("httpClient stop...")
                 httpClient.close()
                 log.info("httpClient stopped.")
+                // 中継履歴の記録を止める
+                runBlocking {
+                    log.info("saveMessageChannel.close...")
+                    saveMessageChannel.close()
+                    log.info("saveMessageJob join...")
+                    saveMessageJob.join()
+                    log.info("saveMessageJob stopped.")
+                }
                 log.info("all resources are closed.")
             }
         }
     )
-    while (true) sleep(3600_000L)
+    while (true){
+        sweepFolders(recordDir,cacheDataDir,cacheErrorDir)
+        sleep(3600_000L)
+    }
+}
+
+fun sweepFolders( vararg folders : File, limit:Long = 86400_000L){
+    for( folder in folders){
+        val names = try{
+            folder.list() ?: continue
+        }catch(ex:Throwable){
+            log.error("listFiled failed. $folder",ex)
+            continue
+        }
+        val expire = System.currentTimeMillis() - limit
+        for( name in names){
+            val file = File(folder,name)
+            when{
+                !file.isFile -> Unit
+                file.lastModified() > expire -> Unit
+                else-> file.delete()
+            }
+        }
+    }
 }
