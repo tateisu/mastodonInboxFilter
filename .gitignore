@@ -43,9 +43,10 @@ bin/
 
 
 ###########################
-logs
-record
-cache
+logs/
+record/
+cache/
+apParseTest/
 mastodonInboxFilter.jar
 mastodonInboxFilter.log
 mastodonInboxFilter.pid
