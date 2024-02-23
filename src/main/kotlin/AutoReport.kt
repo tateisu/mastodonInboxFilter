@@ -572,12 +572,12 @@ suspend fun autoReport(
             return@use
         }
 
-        //////////////////////////////
-        // ログファイルを読んでホスト別に報告する
-
         val expire = System.currentTimeMillis() - 3600_000L * hours
+
+        // map of host to (map of url to time)
         val hosts: MutableMap<String, MutableMap<String, Long>> = ConcurrentHashMap()
 
+        // ログファイルからSPAM投稿URLと時刻を取得する
         forEachLogFile(config, expire) { file ->
             readLogFile(
                 dst = hosts,
@@ -585,6 +585,7 @@ suspend fun autoReport(
                 expire = expire,
             )
         }
+
         if (hosts.isEmpty()) {
             log.info("spam is not found.")
             return@use
