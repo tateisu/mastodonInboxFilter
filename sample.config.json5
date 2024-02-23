@@ -2,23 +2,18 @@
   // このサーバが待機するホストとポート
   listenHost: "0.0.0.0",
   listenPort: 5555,
-
   // スパム以外ならMastodonのサーバに投げ直す
   // 末尾の / はつけない
-  redirectUrl : "https://your-mastodon-server:443",
-
+  redirectUrl: "https://your-mastodon-server:443",
   // 添付データ取得時のリクエストタイムアウト(ミリ秒)
   requestTimeoutMs: 30000,
   // 添付データ取得時のUser-Agent
   userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36",
-
   // 投稿に含まれるメンション数の下限
   mentionMin: 1,
-
   // acct の username部分の長さの範囲
   userNameLengthMin: 10,
   userNameLengthMax: 10,
-
   // フィルタ対象の添付データダイジェスト(SHA256 Base64)
   badImageDigest: [
     "urXJYPJA5bNKV3jjQFUu2kyqG/u2c0XTFtNO0aZ8BN0",
@@ -27,21 +22,18 @@
     "B1rDSbSEWlqHcOLIR5BXHhAcwGBOMopTtQrb2+fmvtA",
     "43znPidVdy+AR36uN6YNlAFWw0sCLUduludF63QHMY8",
   ],
-
   // フィルタ対象の禁止ワード
   badText: [
     "画像が貼れなかったのでメンションだけします",
     "https://荒らし.com/",
     "https://ctkpaarr.org/",
   ],
-
   // 添付データダイジェストが以下のものはSPAMではない。ログ出力しない。
   skipImageDigest: [
     "jEqQObYGWEGRVfkOtHGXe/q16ritXWa7ioqTHF5XOhc",
     "Xt7vXLIjQ8eD/s/TN1gKbNazsEYHrvH6y9SR7hHFYTk",
     "U/afgguCujIh2Q7gDVgc0kEQzDYf9eDCXfhgcsMhnM4",
   ],
-
   // actorのusernameが以下のものはSPAMではない。ログ出力しない。
   // (諸事情で@の後ろはAPドメインではなくactor url のホスト部分
   // 今回の荒らしはMastodon限定なのでまず影響ないが、
@@ -57,7 +49,6 @@
     "tmqhjmps5m@closednetwork.social",
     "Goalkeeper@nicecrew.digital",
   ],
-
   // actorのURLののホスト部分が以下のものはSPAMではない。ログ出力しない。
   skipDomain: [
     // 誤判定回避
@@ -83,4 +74,51 @@
     "mastodon-ero.xyz",
     "kokuusa.club",
   ],
+  // 半自動の報告機能
+  // - 起動方法 java -jar mastodonInboxFilter.jar --autoReport
+  // 動作内容
+  // - ログファイルを読んでNGしたSPAMの投稿URLを収集する (--hours XX で指定した時間数まで遡る)
+  // - 投稿URLのホスト名部分に対して /api/{v2,v1}/instance を読み、管理者アカウントを見つける
+  // - 過去に通報したURLは報告対象にならない
+  // - SPAMの投稿URLがまだアクセス可能か調べる
+  // - URLリストがカラでなければ管理者アカウントにDMを送る
+  autoReport: {
+    // reporter's mastodon account: API host such as https://mastodon.social
+    apiHost: "https://mastodon.juggler.jp",
+    // reporter's mastodon account: API access token
+    accessToken: "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+    // HTTPクライアントのユーザエージェント
+    userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36",
+    // HTTPクライアントのタイムアウト
+    requestTimeoutMs: 60000,
+    // folder to save Urls those already reported or ignored.
+    autoReportDir: "autoReport",
+    // inbox filterのログファイル
+    logFilePrimary: "./mastodonInboxFilter.log",
+    // ログのローテートがあるなら、そのファルダ
+    logFileSecondaryFolder: ".",
+    // ログのローテートがあるなら、そのファイル名パターン(ワイルドカード * ? )
+    logFileSecondaryNamePattern: "mastodonInboxFilter.log.*",
+    // 無視するホスト
+    skipHost: [
+      "niederbayern.social",
+      //  TLSException Received alert during handshake. Level: FATAL, code: ProtocolVersion
+      "besties.com",
+      //  HttpRequestTimeoutException Request timeout has expired [url= , request_timeout=30000 ms]
+      "edusocial.it",
+      //  IllegalArgumentException Invalid TLS record type code: 72
+      "tambayan.us",
+      //  (can't find admin account.)
+      "groupsebelah.com",
+      //  ClientRequestException Client request(GET  ) invalid: 403 Forbidden.
+      "neuroscience-mastodon.com",
+      //  ServerResponseException Server error(GET  : 502 Bad Gateway.
+      "bondsdogs.com",
+      //  ServerResponseException Server error(GET  : 502 Bad Gateway.
+      "m.techsocial.site",
+      //  ServerResponseException Server error(GET  : 502 Bad Gateway.
+      "scfzfilm.org",
+      // ServerResponseException Server error(GET  : 502 Bad Gateway.
+    ],
+  }
 }

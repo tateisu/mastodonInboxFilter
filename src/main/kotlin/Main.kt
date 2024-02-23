@@ -29,13 +29,61 @@ fun main(args: Array<String>) {
     val myPid = ProcessHandle.current().pid()
 
     val parser = ArgParser("java -jar mastodonInboxFilter.jar")
-    val configPath by parser.argument(ArgType.String, description = "config file").optional().default("config.json5")
-    val configTest by parser.option(ArgType.Boolean, fullName = "configTest", description = "config test only")
+    val configPath by parser.argument(
+        ArgType.String,
+        description = "config file"
+    ).optional().default("config.json5")
+
+    val configTest by parser.option(
+        ArgType.Boolean,
+        fullName = "configTest",
+        description = "config test only."
+    ).default(false)
+
+    val autoReport by parser.option(
+        ArgType.Boolean,
+        fullName = "autoReport",
+        description = "not run server, check logs and send DM to remote server admin.",
+    ).default(false)
+
+    val noPost by parser.option(
+        ArgType.Boolean,
+        fullName = "noPost",
+        description = "(with autoReport)not post DMs, just get summary."
+    ).default(false)
+
+    val hours by parser.option(
+        ArgType.Int,
+        fullName = "hours",
+        description = "(with autoReport)Check the logs going back to the specified number of hours."
+    ).default(24)
+
+    val testReport by parser.option(
+        ArgType.String,
+        fullName = "testReport",
+        description = "(with autoReport)just send test report message to specified mention to."
+    )
+
     parser.parse(args)
 
-    val config: Config = Json5.decodeFromString(File(configPath).readText())
+    val configFile = File(configPath)
+    val config: Config = Json5.decodeFromString(configFile.readText())
+    config.configFile = configFile
 
-    if (configTest == true) return
+    if (configTest) return
+
+    if (autoReport) {
+        runBlocking {
+            autoReport(
+                config = config.autoReport
+                    ?: error("config has no autoReport sub object."),
+                noPost = noPost,
+                hours = hours,
+                testMentionTo = testReport,
+            )
+        }
+        return
+    }
 
     writePidFile(
         pidFile = File(config.pidFile),

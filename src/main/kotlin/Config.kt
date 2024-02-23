@@ -1,5 +1,6 @@
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
+import java.io.File
 
 @Serializable
 class Config(
@@ -39,7 +40,12 @@ class Config(
     val skipDomain: List<String>? = null,
 
     val skipInReplyTo: Boolean = true,
+
+    val autoReport: AutoReport? = null,
 ) {
+    @Transient
+    var configFile : File = File("(configFile prop was not set)")
+
     @Transient
     val skipDomainSet = skipDomain?.toSet() ?: emptySet()
 
@@ -54,4 +60,29 @@ class Config(
 
     @Transient
     val userNameLengthRange = userNameLengthMin..userNameLengthMax
+
+    /**
+     * 検出結果の自動報告
+     */
+    @Serializable
+    class AutoReport(
+        // reporter mastodon account: API host such as https://mastodon.social
+        val apiHost: String,
+        // reporter mastodon account: API access token
+        val accessToken: String,
+
+        // HTTPクライアントのユーザエージェント
+        val userAgent: String,
+        // HTTPクライアントのタイムアウト
+        val requestTimeoutMs: Long,
+
+        // folder to save reported urls
+        val autoReportDir:String = "autoReport",
+
+        val logFilePrimary: String = "./mastodonInboxFilter.log",
+        val logFileSecondaryFolder: String? = ".",
+        val logFileSecondaryNamePattern: String? = "mastodonInboxFilter.log.*",
+
+        val skipHost: List<String>? = null,
+    )
 }
