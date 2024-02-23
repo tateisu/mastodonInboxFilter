@@ -33,41 +33,45 @@ import java.time.ZonedDateTime
 
 private val log = LoggerFactory.getLogger("AutoReport")
 
-fun String.wildcardToRegex(): Regex {
-    val rePart = """([?.]|\*+|[^?.*]+)""".toRegex()
-    val escaped = rePart.replace(this) { mr ->
-        val part = mr.groupValues[1]
-        when {
-            part == "." -> """\."""
-            part == "?" -> "."
-            part.startsWith("*") -> ".*"
-            else -> Regex.escape(part)
+/**
+ * HTTPリクエストを投げて404だったら別のリクエストにfallbackする
+ */
+private suspend fun <R> fallback404(blocks: List<suspend () -> R>): R {
+    val last = blocks.indices.last
+    for (i in blocks.indices) {
+        try {
+            return blocks[i]()
+        } catch (ex: Throwable) {
+            val is404 = (ex as? ClientRequestException)?.response?.status == HttpStatusCode.NotFound
+            when {
+                is404 && i < last -> continue
+                else -> throw ex
+            }
         }
     }
-    return """\A$escaped\z""".toRegex(RegexOption.DOT_MATCHES_ALL)
+    error("WILL_NOT_HAPPEN")
 }
 
 /**
- * HTTPリクエストを投げて404だったらfallbackを行う
+ * あるURLが処理済みかどうか
  */
-inline fun <R> catch404(
-    block: () -> R,
-    fallback: () -> R,
-): R {
-    try {
-        return block()
-    } catch (ex: Throwable) {
-        if ((ex as? ClientRequestException)?.response?.status ==
-            HttpStatusCode.NotFound
-        ) {
-            return fallback()
-        }
-        throw ex
-    }
+private fun existsCheckFile(folder: File, url: String) =
+    File(folder, url.safeFileName()).exists()
+
+/**
+ * あるURLが処理済みであることを保存する
+ */
+private fun createCheckFile(folder: File, url: String) {
+    File(folder, url.safeFileName()).writeText(url)
 }
 
-// インスタンス情報の取得
-suspend fun getInstanceInfo(
+/////////////////////////////////////////////////////
+// instance information
+
+/**
+ * Mastodonのインスタンス情報の取得
+ */
+private suspend fun getInstanceInfo(
     httpClient: HttpClient,
     host: String,
     timeoutMs: Long? = null,
@@ -78,27 +82,20 @@ suspend fun getInstanceInfo(
     }
     var url = ""
     try {
-        return catch404(
-            block = {
-                url = "$hostFixed/api/v2/instance"
-                httpClient.get(url) {
-                    if (timeoutMs != null) {
-                        timeout {
-                            requestTimeoutMillis = timeoutMs
-                            socketTimeoutMillis = timeoutMs
-                            connectTimeoutMillis = timeoutMs
-                        }
-                    }
-                }
-            },
-            fallback = {
-                url = "$hostFixed/api/v1/instance"
-                httpClient.get(url) {
-                    if (timeoutMs != null) {
-                        timeout {
-                            requestTimeoutMillis = timeoutMs
-                            socketTimeoutMillis = timeoutMs
-                            connectTimeoutMillis = timeoutMs
+        return fallback404(
+            blocks = arrayOf(
+                "$hostFixed/api/v2/instance",
+                "$hostFixed/api/v1/instance"
+            ).map {
+                {
+                    url = it
+                    httpClient.get(it) {
+                        if (timeoutMs != null) {
+                            timeout {
+                                requestTimeoutMillis = timeoutMs
+                                socketTimeoutMillis = timeoutMs
+                                connectTimeoutMillis = timeoutMs
+                            }
                         }
                     }
                 }
@@ -110,22 +107,64 @@ suspend fun getInstanceInfo(
             ?.replace("""\s*Text: ""\s*""".toRegex(), "")
             ?.replace(url, " ")
             ?: ""
-
         error("${ex.javaClass.simpleName} $message")
     }
 }
 
-fun createCheckFile(folder: File, url: String) {
-    File(folder, url.safeFileName()).writeText(url)
+/**
+ * 指定ホストからインスタンス情報を読んでサーバ管理者のメンション先を取得する
+ * @param adminMentions (output) 取得したメンション先が記録される
+ * @param adminErrors (output) 発生したエラーが記録される
+ * @param httpClient KtorのHttpClient
+ * @param skipHosts ホストがスキップ対象か調べる
+ * @param host 調査対象のホスト名
+ */
+private suspend fun findAdminMention(
+    adminMentions: HashMap<String, String>,
+    adminErrors: HashMap<String, String>,
+    httpClient: HttpClient,
+    skipHosts: Set<String>,
+    host: String,
+) {
+    if (skipHosts.contains(host)) {
+        adminErrors[host] = "(skipped.)"
+        return
+    }
+    val info = try {
+        getInstanceInfo(httpClient, host, timeoutMs = 30_000L)
+    } catch (ex: Throwable) {
+        adminErrors[host] = ex.message ?: ex.javaClass.simpleName
+        return
+    }
+    val apDomain = info.string("domain")
+    if (apDomain == null) {
+        adminErrors[host] = "(can't find AP domain.)"
+        return
+    }
+    val userName = info.jsonObject("contact")?.jsonObject("account")?.string("username")
+    if (userName == null) {
+        adminErrors[host] = "(can't find admin account.)"
+        return
+    }
+    adminMentions[host] = "@$userName@$apDomain"
 }
 
-// apiHost に認証付きでリクエストを投げる
-suspend fun jsonApi(
+/////////////////////////////////////////////////////
+
+/**
+ * 認証付きでリクエストを投げる
+ * @param httpClient KtorのHttpClient
+ * @param config 送信先と認証トークンを含む設定情報
+ * @param method APIのHTTP Method
+ * @param path APIのpath /で始まる
+ * @param params APIにわたすパラメータ
+ */
+private suspend fun jsonApi(
     httpClient: HttpClient,
     config: Config.AutoReport,
     method: HttpMethod,
     path: String,
-    params: JsonObject?,
+    params: JsonObject? = null,
 ) {
     val apiHost = config.apiHost
     val accessToken = config.accessToken
@@ -141,56 +180,97 @@ suspend fun jsonApi(
     // throw error if failed.
 }
 
-suspend fun post(
+/**
+ * Mastodonの投稿APIを呼び出す
+ * @param httpClient KtorのHttpClient
+ * @param config 送信先と認証トークンを含む設定情報
+ * @param status 投稿の本文
+ * @parma visibility 投稿の可視性
+ */
+suspend fun postStatus(
     httpClient: HttpClient,
     config: Config.AutoReport,
     status: String,
     visibility: String,
-) {
-    jsonApi(
-        httpClient,
-        config,
-        HttpMethod.Post,
-        "/api/v1/statuses",
-        params = jsonObject {
-            put("status", status)
-            put("visibility", visibility)
+) = jsonApi(
+    httpClient,
+    config,
+    HttpMethod.Post,
+    "/api/v1/statuses",
+    params = jsonObject {
+        put("status", status)
+        put("visibility", visibility)
+    }
+)
+
+/**
+ * 報告の投稿の本文を作成する
+ * @return 投稿の本文
+ * @param prefix 本文の先頭に付与するテキスト
+ * @param urls SPAMのURLのリスト
+ * @param maxChars 投稿可能な最大文字数
+ * @param urlChars URLの文字数の上限。URLがこれより長い場合、文字数判定においては上限クリップされる
+ */
+fun messageText(
+    prefix: String,
+    urls: List<String>,
+    maxChars: Int,
+    urlChars: Int,
+): String = buildString {
+    append("$prefix automated message: your server send SPAM.\n please suspend SPAM accounts and consider to block mail address domain.\n some samples of posts:")
+    val more = " (more)"
+    var chars = length
+    for (url in urls) {
+        val urlLength = if (url.length > urlChars) url.length else urlChars
+        if (maxChars - chars >= urlLength + more.length + 1 ) {
+            append(" $url")
+            chars += 1 + urlLength
+        } else {
+            append(more)
+            break
         }
-    )
+    }
+    log.info("[$prefix] chars=$chars, length=$length")
 }
 
-//////////////////////////
-// SPAM URL がまだ有効か調べる
+/////////////////////////////////////////
+
+/**
+ * SPAM URL がまだ有効か調べる
+ * @return 有効で未報告のURLのリスト
+ * @param logPrefix ログ出力のprefix。対象ホストなどを想定
+ * @param httpClient KtorのHttpClient
+ * @param checkDir URLが処理済みかどうか調べるためのフォルダ
+ * @param maxOutput 最大出力数
+ * @param urls 調査対象のURLの集合
+ */
 suspend fun checkSpamUrls(
-    host: String,
+    logPrefix: String,
     httpClient: HttpClient,
     checkDir: File,
     maxOutput: Int,
-    urls: Collection<String>,
+    urls: Iterable<String>,
 ) = buildList {
     for (url in urls) {
         if (size > maxOutput) break
-        val checkFile = File(checkDir, url.safeFileName())
-        if (checkFile.exists()) {
+        if (existsCheckFile(checkDir, url)) {
             log.debug("skip: $url")
             continue
         }
         try {
-            httpClient.head(url) {
-            }
+            httpClient.head(url, block = {})
             add(url)
         } catch (ex: Throwable) {
             val message = ex.message
                 ?.replace("""Text: "<!DOCTYPE.*""".toRegex(RegexOption.DOT_MATCHES_ALL), "")
                 ?.replace(url, " ")
                 ?: ""
-            val className = ex.javaClass.simpleName
-            val short = "$className $message"
+            val short = "${ex.javaClass.simpleName} $message"
             when {
                 short.contains("403 Forbidden") ||
                         short.contains("410 Gone")
                 -> {
-                    log.warn("[$host] post deleted? $short")
+                    log.warn("[$logPrefix] post deleted? $short")
                     createCheckFile(checkDir, url)
                 }
 
@@ -202,7 +282,7 @@ suspend fun checkSpamUrls(
                         message.contains("No route to host") ||
                         message.contains("SSL connect attempt failed")
                 -> {
-                    log.warn("[$host] server closed? $short")
+                    log.warn("[$logPrefix] server closed? $short")
                     urls.forEach { createCheckFile(checkDir, it) }
                     break
                 }
@@ -217,74 +297,32 @@ suspend fun checkSpamUrls(
     }
 }
 
-//////////////////////////
-// ホスト別にSPAMを報告する
+//////////////////////////////////////////////////////////
+// ログファイルの読み込み
 
-fun messageText(
-    mentionTo: String,
-    urls: List<String>,
-    maxChars: Int,
-    urlChars: Int,
-): String = buildString {
-    append("$mentionTo automated message: your server send SPAM.\n please suspend SPAM accounts and consider to block mail address domain.\n some samples of posts:")
-    var chars = length
-    for (url in urls) {
-        val urlLength = if (url.length > urlChars) url.length else urlChars
-        if (maxChars - chars >= 3 + urlLength) {
-            append(" $url")
-            chars += 1 + urlLength
-        } else {
-            append(" …")
-            break
-        }
-    }
-    log.info("[$mentionTo] chars=$chars, length=$length")
-}
+private val reLogHeader = """\A(\d+)-(\d+)-(\d+)T(\d+):(\d+):(\d+) INFO\s+SpamCheck - NG """.toRegex()
+private val rePostUrl = """(https://([^/]+)/@[^/]+/\d+)""".toRegex()
 
-val reTime = """\A(\d+)-(\d+)-(\d+)T(\d+):(\d+):(\d+) INFO\s+SpamCheck - NG """.toRegex()
-val rePostUrl = """(https://([^/]+)/@[^/]+/\d+)""".toRegex()
-
-// ログファイルのcanonicalPathの集合を返す
-fun listLogFiles(
-    config: Config.AutoReport,
-    expire: Long,
-): Collection<String> {
-    val logFilePaths = HashSet<String>()
-    config.logFilePrimary.notEmpty()?.let { logFilePaths.add(File(it).canonicalPath) }
-    config.logFileSecondaryFolder?.notEmpty()?.let { folderPath ->
-        val reName = config.logFileSecondaryNamePattern?.wildcardToRegex()
-            ?: return@let
-        val folder = File(folderPath)
-        for (name in folder.list() ?: emptyArray()) {
-            if (!reName.matches(name)) continue
-            val file = File(folder, name)
-            if (!file.isFile) continue
-            if (file.lastModified() < expire) continue
-
-            logFilePaths.add(file.canonicalPath)
-        }
-    }
-    return logFilePaths
-}
-
-fun readLogFile(
+/**
+ * ログファイルを読んでSPAMのURLと時刻を収集する
+ * @param dst (output)ホスト別のURLと時刻のマップ
+ * @param logFile ログファイル
+ * @param expire SPAM URL の収集対象の時刻の下限
+ */
+private fun readLogFile(
     dst: HashMap<String, HashMap<String, Long>>,
-    path: String,
+    logFile: File,
     expire: Long,
 ) {
-    val logFile = File(path)
     if (!logFile.isFile) return
     if (logFile.lastModified() < expire) return
     log.info("reading $logFile")
     BufferedReader(InputStreamReader(FileInputStream(logFile), Charsets.UTF_8)).use { reader ->
         while (true) {
-            var line = reader.readLine() ?: break
-            var matchResult: MatchResult? = null
-            line = reTime.replace(line) {
-                matchResult = it
-                ""
-            }
-            val gvTime = matchResult?.groupValues ?: continue
+            val line = reader.readLine() ?: break
+            // 行内のヘッダ部分を読む
+            val mrHeader = reLogHeader.find(line) ?: continue
+            val gvTime = mrHeader.groupValues
             val t = ZonedDateTime.of(
                 gvTime[1].toInt(),
                 gvTime[2].toInt(),
@@ -295,54 +333,76 @@ fun readLogFile(
                 0, // nano
                 ZoneId.systemDefault()
             ).toInstant().toEpochMilli()
+
             if (t < expire) continue
-            val gvUrl = rePostUrl.find(line)?.groupValues ?: continue
+
+            // SPAM投稿URLを読む
+            val gvUrl = rePostUrl.find(line, startIndex = mrHeader.range.last + 1)
+                ?.groupValues ?: continue
             val url = gvUrl[1]
             val host = gvUrl[2]
+            // dst に記録する
             dst.getOrPut(host) { HashMap() }[url] = t
         }
     }
 }
 
-suspend fun findAdminMention(
-    httpClient: HttpClient,
-    adminMentions: HashMap<String, String>,
-    adminErrors: HashMap<String, String>,
-    skipHosts: Set<String>,
-    host: String,
-) {
-    if (skipHosts.contains(host)) {
-        adminErrors[host] = "(skipped.)"
-        return
+/**
+ * ワイルドカード(`*`,`?`) を正規表現に変換する
+ * - 単体テストがあるのでpublic
+ */
+fun String.wildcardToRegex(): Regex {
+    val rePart = """([?.]|\*+|[^?.*]+)""".toRegex()
+    val escaped = rePart.replace(this) { mr ->
+        val part = mr.groupValues[1]
+        when {
+            part == "." -> """\."""
+            part == "?" -> "."
+            part.startsWith("*") -> ".*"
+            else -> Regex.escape(part)
+        }
     }
-    val info = try {
-        getInstanceInfo(httpClient, host, timeoutMs = 30_000L)
-    } catch (ex: Throwable) {
-        adminErrors[host] = ex.message ?: ex.javaClass.simpleName
-        return
-    }
-    val apDomain = info.string("domain")
-    val userName = info.jsonObject("contact")?.jsonObject("account")?.string("username")
-    if (apDomain == null || userName == null) {
-        adminErrors[host] = "(can't find admin account.)"
-        return
-    }
-    adminMentions[host] = "@$userName@$apDomain"
+    return """\A$escaped\z""".toRegex(RegexOption.DOT_MATCHES_ALL)
 }
 
-fun logHostSummary(
-    host: String,
-    count: Int,
-    error: String?,
-    mention: String?,
+/**
+ * ログファイルを探す
+ * @param config ログファイルの指定のある設定情報
+ * @param expire これより古いファイルは対象外
+ * @param block 見つかったログファイルが渡されるラムダ式
+ */
+fun forEachLogFile(
+    config: Config.AutoReport,
+    expire: Long,
+    block: (File) -> Unit,
 ) {
-    when {
-        error != null -> log.info("$count $host $error")
-        mention != null -> log.info("$count $host $mention")
-        else -> log.info("$count $host ??")
+    val duplicates = HashSet<String>()
+    fun addLogFile(file: File) {
+        if (!file.isFile) return
+        if (file.lastModified() < expire) return
+        val path = file.canonicalPath
+        if (duplicates.contains(path)) return
+        duplicates.add(path)
+        block(file)
+    }
+
+    config.logFilePrimary.notEmpty()?.let { addLogFile(File(it)) }
+    val reName = config.logFileSecondaryNamePattern?.wildcardToRegex()
+        ?: return
+    val folder = config.logFileSecondaryFolder?.notEmpty()?.let { File(it) }
+    if (folder?.isDirectory == true) {
+        for (name in folder.list() ?: emptyArray()) {
+            if (!reName.matches(name)) continue
+            addLogFile(File(folder, name))
+        }
     }
 }
 
+/////////////////////////////////////////////////////////////
+
+/**
+ * reportに使う各メソッドの試験
+ */
 suspend fun testReport(
     httpClient: HttpClient,
     config: Config.AutoReport,
@@ -352,7 +412,7 @@ suspend fun testReport(
     mentionTo: String,
 ) {
     val activeUrls = checkSpamUrls(
-        host = "test",
+        logPrefix = "test",
         httpClient = httpClient,
         checkDir = checkDir,
         maxOutput = 6,
@@ -369,10 +429,10 @@ suspend fun testReport(
         val text = messageText(
             maxChars = maxChars,
             urlChars = urlChars,
-            mentionTo = mentionTo,
+            prefix = mentionTo,
             urls = activeUrls,
         )
-        post(
+        postStatus(
             httpClient = httpClient,
             config = config,
             visibility = "direct",
@@ -384,6 +444,13 @@ suspend fun testReport(
     }
 }
 
+/**
+ * ホスト別に以下の処理を行う
+ * - checkSpamUrls
+ * - messageText
+ * - postStatus
+ * - createCheckFile
+ */
 suspend fun report(
     config: Config.AutoReport,
     httpClient: HttpClient,
@@ -399,7 +466,7 @@ suspend fun report(
 
     val activeUrls = try {
         checkSpamUrls(
-            host = host,
+            logPrefix = host,
             httpClient = httpClient,
             checkDir = checkDir,
             maxOutput = 6,
@@ -414,10 +481,10 @@ suspend fun report(
         val text = messageText(
             maxChars = maxChars,
             urlChars = urlChars,
-            mentionTo = mentionTo,
+            prefix = mentionTo,
             urls = activeUrls,
         )
-        post(
+        postStatus(
             httpClient = httpClient,
             config = config,
             visibility = "direct",
@@ -431,6 +498,34 @@ suspend fun report(
     }
 }
 
+/**
+ * ホスト別にSPAM投稿数、エラー状態、メンション先を表示する
+ */
+fun logHostSummary(
+    host: String,
+    count: Int,
+    error: String?,
+    mention: String?,
+) {
+    when {
+        error != null -> log.info("$count $host $error")
+        mention != null -> log.info("$count $host $mention")
+        else -> log.info("$count $host ??")
+    }
+}
+
+/**
+ * 自動報告
+ * - ログファイルをスキャンして指定時間数以内のSPAM投稿URLを列挙する
+ * - ホスト名別に報告先の管理者アカウントを取得する
+ * - SPAM投稿URLがまだ有効か(削除されてないか)調べる
+ * - 有効なSPAM投稿が残っていればDMを投げて報告する
+ *
+ * @param config 設定情報
+ * @param noPost 報告投稿を行わないなら真。 --noPost
+ * @param hours 指定した時間数まで遡って投稿URLを列挙する。 --hours Int
+ * @param testMentionTo 報告機能の試験のメンション先。 --testRepost String
+ */
 suspend fun autoReport(
     config: Config.AutoReport,
     noPost: Boolean,
@@ -482,22 +577,26 @@ suspend fun autoReport(
         val expire = System.currentTimeMillis() - 3600_000L * hours
         val hosts = HashMap<String, HashMap<String, Long>>()
 
-        for (logFilePath in listLogFiles(config, expire)) {
+        forEachLogFile(config, expire) { file ->
             readLogFile(
                 dst = hosts,
-                path = logFilePath,
+                logFile = file,
                 expire = expire,
             )
         }
+        if (hosts.isEmpty()) {
+            log.info("spam is not found.")
+            return@use
+        }
+
         // SPAM件数降順でソート
         val hostsSorted = hosts.entries.sortedByDescending { it.value.size }
 
         // 管理者アカウントを探す
+        log.info("read instance info…")
         val adminMentions = HashMap<String, String>()
         val adminErrors = HashMap<String, String>()
         val skipHosts = config.skipHost?.toSet() ?: emptySet()
-
-        log.info("read instance info...")
         supervisorScope {
             hostsSorted.map { entry ->
                 async {
@@ -511,6 +610,9 @@ suspend fun autoReport(
                 }
             }.awaitAll()
         }
+
+        // 報告処理
+        log.info("check & make report…")
         supervisorScope {
             hostsSorted.map { entry ->
                 async {
@@ -531,6 +633,7 @@ suspend fun autoReport(
         }
 
         // 件数降順でホスト別サマリを表示
+        log.info("spams within $hours hours.")
         for (entry in hostsSorted) {
             val host = entry.key
             logHostSummary(

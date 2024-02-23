@@ -101,24 +101,24 @@
     logFileSecondaryNamePattern: "mastodonInboxFilter.log.*",
     // 無視するホスト
     skipHost: [
-      "niederbayern.social",
       //  TLSException Received alert during handshake. Level: FATAL, code: ProtocolVersion
-      "besties.com",
+      "niederbayern.social",
       //  HttpRequestTimeoutException Request timeout has expired [url= , request_timeout=30000 ms]
-      "edusocial.it",
+      "besties.com",
       //  IllegalArgumentException Invalid TLS record type code: 72
-      "tambayan.us",
+      "edusocial.it",
       //  (can't find admin account.)
-      "groupsebelah.com",
+      "tambayan.us",
       //  ClientRequestException Client request(GET  ) invalid: 403 Forbidden.
+      "groupsebelah.com",
+      //  ServerResponseException Server error(GET  : 502 Bad Gateway.
       "neuroscience-mastodon.com",
       //  ServerResponseException Server error(GET  : 502 Bad Gateway.
       "bondsdogs.com",
       //  ServerResponseException Server error(GET  : 502 Bad Gateway.
       "m.techsocial.site",
-      //  ServerResponseException Server error(GET  : 502 Bad Gateway.
-      "scfzfilm.org",
       // ServerResponseException Server error(GET  : 502 Bad Gateway.
+      "scfzfilm.org",
     ],
   }
 }
