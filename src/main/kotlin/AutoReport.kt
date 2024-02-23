@@ -30,6 +30,7 @@ import java.io.FileInputStream
 import java.io.InputStreamReader
 import java.time.ZoneId
 import java.time.ZonedDateTime
+import java.util.concurrent.ConcurrentHashMap
 
 private val log = LoggerFactory.getLogger("AutoReport")
 
@@ -120,8 +121,8 @@ private suspend fun getInstanceInfo(
  * @param host 調査対象のホスト名
  */
 private suspend fun findAdminMention(
-    adminMentions: HashMap<String, String>,
-    adminErrors: HashMap<String, String>,
+    adminMentions: MutableMap<String, String>,
+    adminErrors: MutableMap<String, String>,
     httpClient: HttpClient,
     skipHosts: Set<String>,
     host: String,
@@ -222,7 +223,7 @@ fun messageText(
     var chars = length
     for (url in urls) {
         val urlLength = if (url.length > urlChars) url.length else urlChars
-        if (maxChars - chars >= urlLength + more.length + 1 ) {
+        if (maxChars - chars >= urlLength + more.length + 1) {
             append(" $url")
             chars += 1 + urlLength
         } else {
@@ -310,7 +311,7 @@ private val rePostUrl = """(https://([^/]+)/@[^/]+/\d+)""".toRegex()
  * @param expire SPAM URL の収集対象の時刻の下限
  */
 private fun readLogFile(
-    dst: HashMap<String, HashMap<String, Long>>,
+    dst: MutableMap<String, MutableMap<String, Long>>,
     logFile: File,
     expire: Long,
 ) {
@@ -342,7 +343,7 @@ private fun readLogFile(
             val url = gvUrl[1]
             val host = gvUrl[2]
             // dst に記録する
-            dst.getOrPut(host) { HashMap() }[url] = t
+            dst.getOrPut(host) { ConcurrentHashMap() }[url] = t
         }
     }
 }
@@ -459,7 +460,7 @@ suspend fun report(
     noPost: Boolean,
     maxChars: Int,
     urlChars: Int,
-    entry: Map.Entry<String, HashMap<String, Long>>,
+    entry: Map.Entry<String, Map<String, Long>>,
 ) {
     mentionTo ?: return
     val host = entry.key
@@ -575,7 +576,7 @@ suspend fun autoReport(
         // ログファイルを読んでホスト別に報告する
 
         val expire = System.currentTimeMillis() - 3600_000L * hours
-        val hosts = HashMap<String, HashMap<String, Long>>()
+        val hosts: MutableMap<String, MutableMap<String, Long>> = ConcurrentHashMap()
 
         forEachLogFile(config, expire) { file ->
             readLogFile(
@@ -594,8 +595,8 @@ suspend fun autoReport(
 
         // 管理者アカウントを探す
         log.info("read instance info…")
-        val adminMentions = HashMap<String, String>()
-        val adminErrors = HashMap<String, String>()
+        val adminMentions: MutableMap<String, String> = ConcurrentHashMap()
+        val adminErrors: MutableMap<String, String> = ConcurrentHashMap()
         val skipHosts = config.skipHost?.toSet() ?: emptySet()
         supervisorScope {
             hostsSorted.map { entry ->
