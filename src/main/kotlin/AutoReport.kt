@@ -35,7 +35,9 @@ import java.util.concurrent.ConcurrentHashMap
 private val log = LoggerFactory.getLogger("AutoReport")
 
 /**
- * HTTPリクエストを投げて404だったら別のリクエストにfallbackする
+ * 404エラーがあればfallbackする
+ * @param blocks ラムダ式のリスト。多分HTTPリクエストを処理する
+ * @return blocksのどれかが返した値
  */
 private suspend fun <R> fallback404(blocks: List<suspend () -> R>): R {
     val last = blocks.indices.last
@@ -71,6 +73,9 @@ private fun createCheckFile(folder: File, url: String) {
 
 /**
  * Mastodonのインスタンス情報の取得
+ * @param httpClient KtorのHttpClient
+ * @param host 対象サーバのapiHost
+ * @param timeoutMs 非nullならタイムアウト指定を変更する
  */
 private suspend fun getInstanceInfo(
     httpClient: HttpClient,
@@ -204,6 +209,8 @@ suspend fun postStatus(
     }
 )
 
+private const val LineFeed = "\n"
+
 /**
  * 報告の投稿の本文を作成する
  * @return 投稿の本文
@@ -218,7 +225,7 @@ fun messageText(
     maxChars: Int,
     urlChars: Int,
 ): String = buildString {
-    append("$prefix automated message: your server send SPAM.\n please suspend SPAM accounts and consider to block mail address domain.\n some samples of posts:")
+    append("$prefix automated message:${LineFeed}Your server send SPAM.${LineFeed}Please suspend SPAM accounts and consider to block mail address domain.${LineFeed}Samples:")
     val more = " (more)"
     var chars = length
     for (url in urls) {
@@ -623,7 +630,7 @@ suspend fun autoReport(
                     report(
                         config = config,
                         httpClient = httpClient,
-                        mentionTo = adminMentions[entry.key],
+                        mentionTo = adminMentions[host],
                         checkDir = checkDir,
                         noPost = noPost,
                         maxChars = maxChars,
