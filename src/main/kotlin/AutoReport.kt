@@ -6,6 +6,7 @@ import io.ktor.client.engine.cio.CIO
 import io.ktor.client.plugins.ClientRequestException
 import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.UserAgent
+import io.ktor.client.plugins.expectSuccess
 import io.ktor.client.plugins.timeout
 import io.ktor.client.request.get
 import io.ktor.client.request.head
@@ -15,11 +16,13 @@ import io.ktor.client.request.setBody
 import io.ktor.client.request.url
 import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
+import io.ktor.http.encodeURLQueryComponent
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.supervisorScope
 import org.slf4j.LoggerFactory
 import util.JsonObject
+import util.decodeJsonArray
 import util.decodeJsonObject
 import util.jsonObject
 import util.notEmpty
@@ -69,7 +72,102 @@ private fun createCheckFile(folder: File, url: String) {
 }
 
 /////////////////////////////////////////////////////
-// instance information
+// API request
+
+/**
+ * JsonObject をquery文字列にする
+ * - 雑な実装で、配列やオブジェクトをサポートしていない
+ * - 先頭の ? or & の区切りは呼び出し側が別途付与する
+ */
+fun JsonObject.encodeQuery() = buildString {
+    for (entry in entries) {
+        if (isNotEmpty()) append("&")
+        append(entry.key) // パラメータ名は [] などの記号を含むかもしれない。これはエスケープしてはいけない。
+        append("=")
+        when (val value = entry.value) {
+            null -> Unit // 空文字列をappendしたのと同じ
+            else -> append(
+                value.toString().encodeURLQueryComponent(
+                    spaceToPlus = true,
+                )
+            )
+        }
+    }
+}
+
+val reErrorHtml = """Text: "(?:<!DOCTYPE|<html).*""".toRegex(RegexOption.DOT_MATCHES_ALL)
+val reErrorTextEmpty = """\s*Text: ""\s*""".toRegex()
+fun shortRequestError(message: String?): String =
+    message?.replace(reErrorHtml, "")
+        ?.replace(reErrorTextEmpty, "")
+        ?: ""
+
+/**
+ * 認証付きでリクエストを投げる
+ * - throw error if failed.
+ *
+ * @param httpClient KtorのHttpClient
+ * @param config 送信先と認証トークンを含む設定情報
+ * @param method APIのHTTP Method
+ * @param path APIのpath /で始まる
+ * @param params APIにわたすパラメータ
+ */
+private suspend fun jsonApiRaw(
+    httpClient: HttpClient,
+    config: Config.AutoReport,
+    method: HttpMethod,
+    path: String,
+    params: JsonObject? = null,
+): String = httpClient.request {
+    expectSuccess = true
+    this.method = method
+    val tmpUrl = "${config.apiHost}$path"
+    header("Authorization", "Bearer ${config.accessToken}")
+    if (params.isNullOrEmpty()) {
+        url(tmpUrl)
+    } else {
+        when (method) {
+            HttpMethod.Post, HttpMethod.Put, HttpMethod.Patch -> {
+                url(tmpUrl)
+                header("Content-Type", "application/json")
+                setBody(params.toString().encodeToByteArray())
+            }
+
+            else -> {
+                val delm = if (tmpUrl.contains("?")) "&" else "?"
+                url("$tmpUrl$delm${params.encodeQuery()}")
+            }
+        }
+    }
+}.body<String>()
+
+private suspend fun jsonApi(
+    httpClient: HttpClient,
+    config: Config.AutoReport,
+    method: HttpMethod,
+    path: String,
+    params: JsonObject? = null,
+) = jsonApiRaw(
+    httpClient = httpClient,
+    config = config,
+    method = method,
+    path = path,
+    params = params
+).decodeJsonObject()
+
+private suspend fun jsonApiArray(
+    httpClient: HttpClient,
+    config: Config.AutoReport,
+    method: HttpMethod,
+    path: String,
+    params: JsonObject? = null,
+) = jsonApiRaw(
+    httpClient = httpClient,
+    config = config,
+    method = method,
+    path = path,
+    params = params
+).decodeJsonArray()
 
 /**
  * Mastodonのインスタンス情報の取得
@@ -108,11 +206,8 @@ private suspend fun getInstanceInfo(
             }
         ).body<String>().decodeJsonObject()
     } catch (ex: Throwable) {
-        val message = ex.message
-            ?.replace("""Text: "<!DOCTYPE.*""".toRegex(RegexOption.DOT_MATCHES_ALL), "")
-            ?.replace("""\s*Text: ""\s*""".toRegex(), "")
-            ?.replace(url, " ")
-            ?: ""
+        val message = shortRequestError(ex.message)
+            .replace(url, " ")
         error("${ex.javaClass.simpleName} $message")
     }
 }
@@ -129,6 +224,7 @@ private suspend fun findAdminMention(
     adminMentions: MutableMap<String, String>,
     adminErrors: MutableMap<String, String>,
     httpClient: HttpClient,
+    config: Config.AutoReport,
     skipHosts: Set<String>,
     host: String,
 ) {
@@ -152,39 +248,34 @@ private suspend fun findAdminMention(
         adminErrors[host] = "(can't find admin account.)"
         return
     }
-    adminMentions[host] = "@$userName@$apDomain"
+    val acct = "$userName@$apDomain"
+
+    // lookup account id on reporter's server
+    try {
+        jsonApiArray(
+            httpClient = httpClient,
+            config = config,
+            method = HttpMethod.Get,
+            path = "/api/v1/accounts/search",
+            params = jsonObject {
+                put("resolve", true)
+                put("q", acct)
+            }
+        ).firstOrNull() ?: error("(blocked? can't resolve admin account)")
+        // log.info("root=$root")
+    } catch (ex: Throwable) {
+        val message = shortRequestError(ex.message)
+            .replace("""\Q/api/v1/accounts/search?\E[&=\w@._-]+""".toRegex(), " ")
+        adminErrors[host] = when {
+            message.contains("can't resolve admin account") -> message
+            else -> "${ex.javaClass.simpleName} $message"
+        }
+        return
+    }
+    adminMentions[host] = "@$acct"
 }
 
 /////////////////////////////////////////////////////
-
-/**
- * 認証付きでリクエストを投げる
- * @param httpClient KtorのHttpClient
- * @param config 送信先と認証トークンを含む設定情報
- * @param method APIのHTTP Method
- * @param path APIのpath /で始まる
- * @param params APIにわたすパラメータ
- */
-private suspend fun jsonApi(
-    httpClient: HttpClient,
-    config: Config.AutoReport,
-    method: HttpMethod,
-    path: String,
-    params: JsonObject? = null,
-) {
-    val apiHost = config.apiHost
-    val accessToken = config.accessToken
-    httpClient.request {
-        this.method = method
-        url("$apiHost$path")
-        header("Authorization", "Bearer $accessToken")
-        if (params != null && method == HttpMethod.Post) {
-            header("Content-Type", "application/json")
-            setBody(params.toString().encodeToByteArray())
-        }
-    }
-    // throw error if failed.
-}
 
 /**
  * Mastodonの投稿APIを呼び出す
@@ -269,11 +360,11 @@ suspend fun checkSpamUrls(
             httpClient.head(url, block = {})
             add(url)
         } catch (ex: Throwable) {
-            val message = ex.message
-                ?.replace("""Text: "<!DOCTYPE.*""".toRegex(RegexOption.DOT_MATCHES_ALL), "")
-                ?.replace(url, " ")
-                ?: ""
+            val message = shortRequestError(ex.message)
+                .replace(url, " ")
+
             val short = "${ex.javaClass.simpleName} $message"
+
             when {
                 short.contains("403 Forbidden") ||
                         short.contains("410 Gone")
@@ -611,6 +702,7 @@ suspend fun autoReport(
                 async {
                     findAdminMention(
                         httpClient = httpClient,
+                        config = config,
                         adminMentions = adminMentions,
                         adminErrors = adminErrors,
                         skipHosts = skipHosts,
@@ -626,7 +718,7 @@ suspend fun autoReport(
             hostsSorted.map { entry ->
                 async {
                     val host = entry.key
-                    if (skipHosts.contains(host)) return@async
+                    if (skipHosts.contains(host) || adminErrors[host] != null ) return@async
                     report(
                         config = config,
                         httpClient = httpClient,

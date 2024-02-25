@@ -72,11 +72,12 @@ suspend fun isSpam(
     }
     for (a in document.getElementsByTag("a")) {
         val clazz = a.attr("class") ?: ""
+        val rel = a.attr("rel") ?: ""
         when {
             clazz == "u-url mention" -> a.replaceWith(TextNode(" "))
 
-            // 特に何もしない
-            clazz.contains("hashtag") -> Unit
+            // ハッシュタグは変換しない
+            clazz.contains("hashtag") || rel=="tag" -> Unit
 
             // リンクは表示文字列を実URLに展開する
             else -> a.attr("href").takeIf { it.isNotEmpty() }

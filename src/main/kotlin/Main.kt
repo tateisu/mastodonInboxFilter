@@ -20,6 +20,9 @@ import org.slf4j.LoggerFactory
 import util.EmptyScope
 import java.io.File
 import java.lang.Thread.sleep
+import java.nio.file.Files
+import java.nio.file.Path
+import kotlin.io.path.name
 
 private val log = LoggerFactory.getLogger("Main")
 
@@ -168,27 +171,45 @@ fun main(args: Array<String>) {
         }
     )
     while (true) {
-        sweepFolders(recordDir, cacheDataDir, cacheErrorDir)
+        val limit = 86400_000L
+        recordDir.sweepOldRecursive(limit)
+        cacheDataDir.sweepOldRecursive(limit)
+        cacheErrorDir.sweepOldRecursive(limit)
         sleep(3600_000L)
     }
 }
 
-fun sweepFolders(vararg folders: File, limit: Long = 86400_000L) {
-    for (folder in folders) {
-        val names = try {
-            folder.list() ?: continue
-        } catch (ex: Throwable) {
-            log.error("listFiled failed. $folder", ex)
-            continue
-        }
-        val expire = System.currentTimeMillis() - limit
-        for (name in names) {
-            val file = File(folder, name)
+fun File.sweepOldRecursive(limit: Long = 86400_000L): Int {
+    log.info("(sweepOldRecursive $this")
+    val expire = System.currentTimeMillis() - limit
+    var remain = 0
+    Files.walk(this.toPath()).use { pathStream ->
+        pathStream.forEach { path: Path? ->
+            val name = path?.name
+            if (name == null || name == "" || name == "." || name == "..") return@forEach
+            val file = path.toFile()
+            ++remain
+            fun delete() {
+                file.delete()
+                --remain
+            }
             when {
-                !file.isFile -> Unit
-                file.lastModified() > expire -> Unit
-                else -> file.delete()
+                file.isDirectory -> {
+                    when {
+                        // F指定フォルダ自身は除外
+                        file.canonicalPath == this.canonicalPath -> --remain
+                        // サブフォルダを掃除してカラなら削除
+                        file.sweepOldRecursive(limit) == 0 -> delete()
+                    }
+                }
+
+                file.isFile -> when {
+                    file.lastModified() > expire -> Unit
+                    else -> delete()
+                }
             }
         }
     }
+    log.info(")sweepOldRecursive $this")
+    return remain
 }
