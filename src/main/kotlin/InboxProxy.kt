@@ -14,6 +14,7 @@ import io.ktor.server.request.httpMethod
 import io.ktor.server.request.receive
 import io.ktor.server.request.uri
 import io.ktor.server.response.header
+import io.ktor.server.response.respond
 import io.ktor.server.response.respondBytes
 import io.ktor.server.response.respondText
 import io.ktor.util.pipeline.PipelineContext
@@ -39,7 +40,7 @@ suspend fun PipelineContext<Unit, ApplicationCall>.inboxProxy(
 
     val requestMethod = call.request.httpMethod
     val requestUri = call.request.uri
-    log.debug("inboxProxy ${requestMethod.value} $requestUri")
+    log.info("(inboxProxy ${requestMethod.value} $requestUri")
     val incomingBody = call.receive<ByteArray>()
     val incomingHeaders = call.request.headers.toSaveHeaders()
 
@@ -101,15 +102,23 @@ suspend fun PipelineContext<Unit, ApplicationCall>.inboxProxy(
         for (pair in outgoingHeaders) {
             when {
                 pair.first == HttpHeaders.ContentType -> Unit
+                pair.first == HttpHeaders.ContentLength -> Unit
                 skipHeaders.contains(pair.first.lowercase()) -> Unit
                 else -> call.response.header(pair.first, pair.second)
             }
         }
-        call.respondBytes(
-            contentType = originalResponse.contentType(),
-            status = originalResponse.status,
-            provider = { outgoingBody },
-        )
+        when (originalResponse.status) {
+            HttpStatusCode.Accepted,
+            HttpStatusCode.NoContent,
+            -> call.respond(originalResponse.status)
+
+            else -> call.respondBytes(
+                contentType = originalResponse.contentType(),
+                status = originalResponse.status,
+                provider = { outgoingBody },
+            )
+        }
+        log.info(")inboxProxy ${requestMethod.value} $requestUri")
     } finally {
         try {
             saveMessageChannel.send(saveMessage)

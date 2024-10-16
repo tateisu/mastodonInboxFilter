@@ -1,8 +1,13 @@
+@file:Suppress("LoggingStringTemplateAsArgument")
+
 import io.github.xn32.json5k.Json5
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.cio.CIO
 import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.UserAgent
+import io.ktor.client.plugins.logging.LogLevel
+import io.ktor.client.plugins.logging.Logging
+import io.ktor.http.HttpHeaders
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
 import io.ktor.server.routing.post
@@ -22,7 +27,9 @@ import java.io.File
 import java.lang.Thread.sleep
 import java.nio.file.Files
 import java.nio.file.Path
+import java.util.logging.Logger
 import kotlin.io.path.name
+import kotlin.math.abs
 
 private val log = LoggerFactory.getLogger("Main")
 
@@ -110,6 +117,14 @@ fun main(args: Array<String>) {
             requestTimeoutMillis = config.requestTimeoutMs
             connectTimeoutMillis = config.requestTimeoutMs
         }
+//        install(Logging) {
+////            logger = Logger.DEFAULT
+//            level = LogLevel.I
+////            filter { request ->
+////                request.url.host.contains("ktor.io")
+////            }
+//            sanitizeHeader { header -> header == HttpHeaders.Authorization }
+//        }
     }
     val saveMessageChannel = Channel<SaveMessage>()
     val saveMessageJob = EmptyScope.launch(Dispatchers.IO) {
@@ -171,6 +186,8 @@ fun main(args: Array<String>) {
         }
     )
     while (true) {
+        logHeap()
+
         val limit = 86400_000L
         recordDir.sweepOldRecursive(limit)
         cacheDataDir.sweepOldRecursive(limit)
@@ -196,7 +213,7 @@ fun File.sweepOldRecursive(limit: Long = 86400_000L): Int {
             when {
                 file.isDirectory -> {
                     when {
-                        // F指定フォルダ自身は除外
+                        // 指定フォルダ自身は除外
                         file.canonicalPath == this.canonicalPath -> --remain
                         // サブフォルダを掃除してカラなら削除
                         file.sweepOldRecursive(limit) == 0 -> delete()
@@ -212,4 +229,45 @@ fun File.sweepOldRecursive(limit: Long = 86400_000L): Int {
     }
     log.info(")sweepOldRecursive $this")
     return remain
+}
+
+fun logHeap() {
+    val runtime = Runtime.getRuntime()
+
+    // Get maximum size of heap in bytes. The heap cannot grow beyond this size.
+    // Any attempt will result in an OutOfMemoryException.
+    // -XX:MaxRam で指定した値の1/4までにクリップされる。
+    val heapMaxSize = runtime.maxMemory()
+
+    // Get current size of heap in bytes
+    val heapSize = runtime.totalMemory()
+
+    // Get amount of free memory within the heap in bytes. This size will increase
+    // after garbage collection and decrease as new objects are created.
+    val heapFreeSize = runtime.freeMemory()
+    log.info("heapMaxSize=${heapMaxSize.formatSize()}, heapSize=${heapSize.formatSize()}, heapFreeSize=${heapFreeSize.formatSize()}")
+}
+
+// IEC80000-13 Binary prefix
+private val binaryPrefixes = arrayOf(
+    Pair("Gi", 1024L * 1024L * 1024L),
+    Pair("Mi", 1024L * 1024L),
+    Pair("Ki", 1024L),
+)
+
+fun Long.formatSize(): String {
+    val sign = when {
+        this < 0 -> "-"
+        else -> ""
+    }
+    val n = abs(this)
+    return binaryPrefixes.firstOrNull { n >= it.second }?.let {
+        val d = n.toDouble().div(it.second)
+        val s = when {
+            d >= 100.0 -> "%.01f"
+            d >= 10.0 -> "%.02f"
+            else -> "%.03f"
+        }.format(d)
+        "${sign}${s}${it.first}B"
+    } ?: "${sign}${n}bytes"
 }

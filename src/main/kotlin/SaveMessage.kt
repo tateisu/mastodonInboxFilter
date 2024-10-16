@@ -49,6 +49,7 @@ suspend fun consumeSaveMessage(
         try {
             val record = channel.receive()
             val name = "${record.time}-${++idx}"
+            log.info("(save $name")
             val headerText = buildString {
                 record.extraHeaders.forEach {
                     append("${it.first}: ${it.second}\n")
@@ -71,6 +72,7 @@ suspend fun consumeSaveMessage(
             record.responseBody?.notEmpty()?.let {
                 File(recordDir, "$name.response.body").writeBytes(it)
             }
+            log.info(")save $name")
         } catch (ex: Throwable) {
             when (ex) {
                 is CancellationException,
@@ -82,4 +84,3 @@ suspend fun consumeSaveMessage(
         }
     }
 }
-
