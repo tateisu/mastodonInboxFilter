@@ -107,18 +107,21 @@ suspend fun PipelineContext<Unit, ApplicationCall>.inboxProxy(
                 else -> call.response.header(pair.first, pair.second)
             }
         }
-        when (originalResponse.status) {
-            HttpStatusCode.Accepted,
-            HttpStatusCode.NoContent,
-            -> call.respond(originalResponse.status)
+        when {
+            outgoingBody.isEmpty() -> {
+                call.respond(originalResponse.status)
+                log.info(")inboxProxy ${requestMethod.value} $requestUri (response without body)")
+            }
 
-            else -> call.respondBytes(
-                contentType = originalResponse.contentType(),
-                status = originalResponse.status,
-                provider = { outgoingBody },
-            )
+            else -> {
+                call.respondBytes(
+                    contentType = originalResponse.contentType(),
+                    status = originalResponse.status,
+                    provider = { outgoingBody },
+                )
+                log.info(")inboxProxy ${requestMethod.value} $requestUri (response with body)")
+            }
         }
-        log.info(")inboxProxy ${requestMethod.value} $requestUri")
     } finally {
         try {
             saveMessageChannel.send(saveMessage)
